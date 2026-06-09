@@ -190,6 +190,17 @@
 
   <div class="qa"><button class="q" data-keywords="imanagedidentityservice acquiretoken api"><span class="lvl adv">Advanced</span>What is IManagedIdentityService?</button>
   <div class="a"><p>It&rsquo;s the service your plug-in requests from the sandbox to get a token. The method signature is <code class="inl">string AcquireToken(IEnumerable&lt;string&gt; scopes)</code>. You pass the scope(s) for the resource you want (e.g. Key Vault, your API), and it returns an access token &mdash; handling the entire federated acquisition for you, with no credentials in your code.</p></div></div>
+
+  <div class="qa"><button class="q" data-keywords="asymmetric private public key sign verify"><span class="lvl inter">Intermediate</span>We sign with a private key and verify with the public key &mdash; does Azure also verify the plug-in?</button>
+  <div class="a"><p>There are actually <strong>two different checks, by two different parties, on two different things</strong> &mdash; they&rsquo;re easy to mix up:</p>
+  <ul>
+    <li><strong>Check 1 &mdash; Dataverse / Power Platform</strong> (this is the asymmetric-key one). The certificate&rsquo;s private key signs the DLL; the public key verifies that signature. Power Platform uses the public key to confirm &ldquo;this plug-in really was signed by that certificate and hasn&rsquo;t been tampered with.&rdquo; <strong>Azure is not involved here &mdash; it never even receives your DLL.</strong></li>
+    <li><strong>Check 2 &mdash; Azure (Entra ID)</strong>, but it checks something else. Azure does <em>not</em> re-check your code signature. When the plug-in asks for a token, Power Platform sends Azure a small <strong>signed statement (the assertion)</strong> meaning &ldquo;this request comes from the plug-in signed by certificate #ABC123, in environment X.&rdquo; Azure then (a) verifies <em>that statement&rsquo;s</em> signature using Power Platform&rsquo;s public keys, and (b) checks that the <strong>fingerprint and environment</strong> in it match what you registered in the federated credential.</li>
+  </ul>
+  <p>So: <strong>Dataverse verifies the plug-in (with the public key); Azure verifies Power Platform&rsquo;s signed statement and matches the fingerprint</strong> &mdash; never the code, never the private key.</p></div></div>
+
+  <div class="qa"><button class="q" data-keywords="wax seal mailroom bank analogy two checks"><span class="lvl basic">Basic</span>Is there a simple analogy for those two checks?</button>
+  <div class="a"><p>Think of your signature as a <strong>wax seal</strong> on a letter. <strong>Dataverse is the mailroom</strong> that checks the wax seal against your stamp to confirm the letter is genuinely yours and unopened &mdash; the public-key verification. <strong>Azure is the bank.</strong> The bank doesn&rsquo;t re-examine the seal; the mailroom hands it a signed note (&ldquo;this came from the holder of seal #ABC123, at branch X&rdquo;). The bank confirms the note is really from the mailroom it trusts, and that the seal and branch are on its approved list &mdash; then it pays out (issues the token). The bank trusts the mailroom&rsquo;s word plus the fingerprint on file; it never needs the seal itself.</p></div></div>
 </section>
 
 <!-- ================= CERTS ================= -->
@@ -247,6 +258,52 @@
 
   <div class="qa"><button class="q" data-keywords="eku code signing secure email usage oid 3.3 3.4"><span class="lvl inter">Intermediate</span>What is Enhanced Key Usage (Code Signing vs Secure Email)?</button>
   <div class="a"><p>EKU defines what a certificate is allowed to do. The OID <code class="inl">1.3.6.1.5.5.7.3.3</code> is <strong>Code Signing</strong>; <code class="inl">1.3.6.1.5.5.7.3.4</code> is <strong>Secure Email</strong>. A common pitfall: Microsoft&rsquo;s sample snippet creates a Secure-Email-only cert, which SignTool rejects with &ldquo;No certificates were found that met all the given criteria.&rdquo; The fix is to include the Code Signing usage when creating the cert.</p></div></div>
+
+  <div class="qa"><button class="q" data-keywords="self-signed vs ca claim who vouches identity confirm"><span class="lvl basic">Basic</span>In plain terms, what is the difference between self-signed and CA &mdash; who vouches for it?</button>
+  <div class="a"><p>A certificate makes a claim: &ldquo;this software was published by [Your Company].&rdquo; The whole difference is <strong>who confirms that claim.</strong></p>
+  <p><strong>Self-signed</strong> &mdash; you confirm your own claim. It effectively says &ldquo;this is from My Company, and the proof is&hellip; My Company says so.&rdquo; That&rsquo;s circular &mdash; no independent party. Anyone could generate a cert that says the same thing. It proves the file wasn&rsquo;t tampered with, but not reliably <em>who</em> made it.</p>
+  <p><strong>CA-issued</strong> &mdash; a trusted authority (DigiCert, Sectigo, GlobalSign) verifies your organization&rsquo;s identity <em>before</em> signing your cert. Now the claim is backed by a neutral party everyone already trusts.</p>
+  <p>The technology is identical (private key signs, public key verifies); the only difference is <strong>trust: self-signed trust comes from you; CA trust comes from an authority everyone already believes.</strong> Analogy: self-signed is a <em>handwritten note</em> saying &ldquo;I am John Smith&rdquo;; CA-issued is a <em>passport</em> &mdash; a recognized authority checked you, so strangers accept it.</p></div></div>
+
+  <div class="qa"><button class="q" data-keywords="trusted outside machine trust root store local"><span class="lvl inter">Intermediate</span>What does &ldquo;trusted outside your machine&rdquo; mean? I generated it on my PC.</button>
+  <div class="a"><p>Trust isn&rsquo;t a property of the certificate &mdash; it&rsquo;s about whose <strong>Trusted Root</strong> list the certificate (or its issuer) is on. Windows, Azure, and browsers ship pre-loaded with the big public CAs. When you generated a self-signed cert, it was placed in <strong>your machine&rsquo;s own store</strong>, so only <em>your</em> machine trusts it. No other computer has it on its list, and no authority it already trusts vouches for it &mdash; so elsewhere it&rsquo;s &ldquo;untrusted.&rdquo; A CA cert is trusted everywhere because the CA is already on everyone&rsquo;s list. (Analogy: a home-printed VIP pass works in your house; an official ticket works at every gate.)</p>
+  <p><em>Nuance for this setup:</em> the managed-identity token flow trusts your plug-in by <strong>fingerprint match</strong> in the federated credential, not by the OS root store &mdash; which is why a self-signed cert still <em>functions</em> here.</p></div></div>
+
+  <div class="qa"><button class="q" data-keywords="security problem self-signed forge revoke impersonate accountability"><span class="lvl adv">Advanced</span>From a security view, what does CA actually fix that self-signed doesn&rsquo;t?</button>
+  <div class="a"><p>The signing <em>math</em> is equally strong &mdash; &ldquo;CA is more secure&rdquo; is misleading. The real gaps are about what an attacker can get away with:</p>
+  <ul>
+    <li><strong>Impersonation:</strong> anyone can generate a self-signed cert that says <code class="inl">CN=YourCompany</code> in seconds; nothing distinguishes it from yours. A CA refuses to issue &ldquo;YourCompany&rdquo; to someone who isn&rsquo;t you.</li>
+    <li><strong>No revocation (the big one):</strong> if a self-signed key leaks, there&rsquo;s no kill switch &mdash; no authority to publish &ldquo;this cert is now bad.&rdquo; A CA can <strong>revoke</strong> it, and revocation-checking systems then reject anything signed with it.</li>
+    <li><strong>Uncontrolled trust:</strong> installing a self-signed cert into a machine&rsquo;s Trusted Root makes it trust <em>anything</em> that cert ever signs, forever, with no clean way to pull it back.</li>
+    <li><strong>No accountability:</strong> a CA cert ties the signature to a legally verified org; self-signed ties it to &ldquo;whoever generated it.&rdquo;</li>
+  </ul>
+  <p><em>Nuance for this setup:</em> because Azure matches a registered fingerprint (not a CA or revocation list), the impersonation and trusted-store gaps are softened &mdash; a look-alike won&rsquo;t match your hash. But <strong>revocation, accountability, and governance</strong> still bite in production: a leaked self-signed key has no kill switch, tends to live un-managed on a laptop, and won&rsquo;t pass a security/compliance review. So the honest case for CA in production is &ldquo;unmanageable and unrevocable when something goes wrong&rdquo; &mdash; not &ldquo;weaker encryption.&rdquo;</p></div></div>
+
+  <div class="qa"><button class="q" data-keywords="why ca production required governance audit compliance"><span class="lvl basic">Basic</span>Why is a CA certificate required specifically for production?</button>
+  <div class="a"><p>In development you&rsquo;re the only one who needs to trust the cert &mdash; so self-signed is fine and free. In production the certificate becomes the <strong>anchor of &ldquo;this plug-in is genuinely ours,&rdquo;</strong> and others depend on that: identity must be real (not self-declared and forgeable), it must be <strong>governable and revocable</strong> if compromised, and it must <strong>pass audit/compliance</strong> &mdash; reviewers expect a recognized CA because that&rsquo;s the only signature an outside party can independently verify. Microsoft&rsquo;s own guidance: self-signed for testing, CA-issued for production.</p></div></div>
+
+  <div class="qa"><button class="q" data-keywords="machine destroyed lost different computer pfx backup portable"><span class="lvl inter">Intermediate</span>What if my machine is destroyed, or I sign on a different machine &mdash; will it still work?</button>
+  <div class="a"><p>What matters is the <strong>certificate file (the <code class="inl">.pfx</code>, with its private key and password)</strong> &mdash; not the specific computer. Azure matches the fingerprint, so you can sign from any machine that has the <code class="inl">.pfx</code>.</p>
+  <ul>
+    <li><strong>Different machine:</strong> works &mdash; import the <code class="inl">.pfx</code> (or sign directly from it with <code class="inl">signtool /f MyCert.pfx /p &hellip;</code>).</li>
+    <li><strong>Machine destroyed, <code class="inl">.pfx</code> backed up:</strong> no problem &mdash; restore it elsewhere. Already-deployed plug-ins never notice.</li>
+    <li><strong>Machine destroyed, cert never exported:</strong> the private key is lost. Deployed plug-ins keep running (if timestamped), but to ship a new build you must create a <em>new</em> cert, update the federated credential&rsquo;s hash, re-sign, and re-deploy.</li>
+  </ul>
+  <p>So back up the <code class="inl">.pfx</code> and its password somewhere shared (password manager, or ideally Azure Key Vault), and treat the signing cert as a team asset &mdash; not something living on one laptop.</p></div></div>
+
+  <div class="qa"><button class="q" data-keywords="expire expiry still work timestamp deployed running"><span class="lvl basic">Basic</span>If the plug-in keeps working after the certificate expires, why does the expiry date matter?</button>
+  <div class="a"><p>You&rsquo;re right that for an <strong>already-deployed, timestamped</strong> plug-in the expiry date doesn&rsquo;t matter &mdash; the timestamp froze its trust at signing time, so it keeps running indefinitely. Expiry only matters in three moments:</p>
+  <ul>
+    <li><strong>Your next rebuild:</strong> you cannot create a <em>new</em> signature with an expired cert, so the next time a developer rebuilds the DLL they need a valid cert again.</li>
+    <li><strong>Any signature made <em>without</em> a timestamp:</strong> that one does become untrusted at expiry.</li>
+    <li><strong>Re-signing:</strong> a new cert means a new fingerprint, which triggers the federated-credential update.</li>
+  </ul>
+  <p>So expiry isn&rsquo;t a time bomb on running code &mdash; it&rsquo;s a &ldquo;renew before your next build&rdquo; reminder. (Like a driver&rsquo;s licence: an old signed contract stays valid, but you can&rsquo;t sign a <em>new</em> one with an expired licence.) Tip: give self-signed dev certs a longer validity (e.g. 3&ndash;5 years) to hit this less often.</p></div></div>
+
+  <div class="qa"><button class="q" data-keywords="renew expiry new key fingerprint update federated credential azure steps"><span class="lvl inter">Intermediate</span>At expiry, do I create a new cert and update the hash in Azure? What about CA?</button>
+  <div class="a"><p>The deciding question is always: <strong>did the fingerprint (hash) change?</strong> New fingerprint &rarr; you must update the federated credential; same fingerprint &rarr; no Azure change.</p>
+  <p><strong>Self-signed:</strong> regenerating always produces a new key pair &rarr; new fingerprint, so you <em>always</em> update Azure. Steps: (1) create a new self-signed cert; (2) get the new hash with <code class="inl">Get-FileHash MyCert.cer -Algorithm SHA256</code>; (3) update the federated credential&rsquo;s <code class="inl">/h/{hash}</code> in the app registration; (4) re-sign with timestamp; (5) update the assembly in Dataverse.</p>
+  <p><strong>CA-issued:</strong> if it&rsquo;s renewed with a <em>new</em> key, do the same update &mdash; but if the federated credential was set up by <strong>issuer + subject</strong> (not raw hash) and you stay with the same CA/org, it may keep matching with <em>no Azure change</em>. Some CAs also renew keeping the <em>same</em> key &rarr; same fingerprint &rarr; nothing to update. Either way you re-sign and re-deploy. In all cases, already-deployed timestamped plug-ins stay up throughout.</p></div></div>
 </section>
 
 <!-- ================= SECURITY ================= -->
@@ -306,6 +363,17 @@
 
   <div class="qa"><button class="q" data-keywords="ga supported generally available microsoft support"><span class="lvl basic">Basic</span>Is managed identity for Dataverse plug-ins supported (GA)?</button>
   <div class="a"><p>Managed identity for Dataverse plug-ins (including dependent assembly plug-ins) is generally available and Microsoft-supported. Availability details for specialized clouds and the latest support boundaries are in Microsoft&rsquo;s documentation &mdash; verify there for your specific cloud and region.</p></div></div>
+
+  <div class="qa"><button class="q" data-keywords="renewal runbook expiry checklist steps backup"><span class="lvl inter">Intermediate</span>Is there a short renewal runbook I can follow?</button>
+  <div class="a"><p>When you need a fresh cert (typically at the next rebuild after expiry):</p>
+  <ul>
+    <li><strong>1.</strong> Get a valid cert &mdash; self-signed: regenerate (new key/hash); CA: renew/reissue.</li>
+    <li><strong>2.</strong> Get the new fingerprint: <code class="inl">Get-FileHash MyCert.cer -Algorithm SHA256</code>.</li>
+    <li><strong>3.</strong> Update the federated credential in the app registration if the fingerprint (or issuer/subject) changed.</li>
+    <li><strong>4.</strong> Re-sign the DLL <em>with a timestamp</em> (<code class="inl">/t http://timestamp.digicert.com</code>).</li>
+    <li><strong>5.</strong> Update the assembly in Dataverse, and back up the new <code class="inl">.pfx</code> + password.</li>
+  </ul>
+  <p>Deployed, timestamped plug-ins stay up throughout &mdash; this work is only needed to ship the next build. Tip: renew a couple of weeks before expiry so it&rsquo;s planned, not a scramble.</p></div></div>
 </section>
 
 <!-- ================= BUSINESS ================= -->
