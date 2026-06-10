@@ -1,0 +1,2101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HANA Acronyms — Searchable Dictionary</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #0f172a;
+    background: #0b1220;
+    overflow-x: hidden;
+  }
+  ::selection { background: #818cf8; color: #fff; }
+
+  /* ============================================================
+     LAYOUT
+  ============================================================ */
+  .app {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 20px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* The pulse background — visible when idle */
+  .pulse-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+    transition: opacity .6s ease;
+  }
+  .pulse-bg.dim { opacity: 0.18; }
+
+  .pulse-bg::before,
+  .pulse-bg::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    mix-blend-mode: screen;
+    opacity: 0.9;
+  }
+  .pulse-bg::before {
+    width: 720px; height: 720px;
+    top: 12%; left: 22%;
+    background: radial-gradient(circle, #6366f1 0%, transparent 70%);
+    animation: floatA 9s ease-in-out infinite;
+  }
+  .pulse-bg::after {
+    width: 640px; height: 640px;
+    top: 38%; right: 18%;
+    background: radial-gradient(circle, #ec4899 0%, transparent 70%);
+    animation: floatB 11s ease-in-out infinite;
+  }
+  .blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(70px);
+    mix-blend-mode: screen;
+    opacity: 0.7;
+    pointer-events: none;
+  }
+  .blob-c { width: 520px; height: 520px; bottom: 0; left: 38%; background: radial-gradient(circle, #06b6d4 0%, transparent 70%); animation: floatC 13s ease-in-out infinite; }
+  .blob-d { width: 460px; height: 460px; top: 4%; right: 4%;  background: radial-gradient(circle, #a855f7 0%, transparent 70%); animation: floatD 15s ease-in-out infinite; }
+  .blob-e { width: 380px; height: 380px; bottom: 4%; left: 4%; background: radial-gradient(circle, #f59e0b 0%, transparent 70%); animation: floatE 12s ease-in-out infinite; }
+
+  @keyframes floatA { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(60px,40px) scale(1.08); } }
+  @keyframes floatB { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-50px,70px) scale(1.12); } }
+  @keyframes floatC { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(80px,-40px) scale(0.95); } }
+  @keyframes floatD { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-70px,30px) scale(1.05); } }
+  @keyframes floatE { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(40px,-30px) scale(1.1); } }
+
+  /* Idle center pulse */
+  .center {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding-top: 18vh;
+    transition: padding .5s ease, transform .5s ease;
+  }
+  .center.compact { padding-top: 4vh; }
+
+  .ring {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    margin: 0 auto 28px;
+    transition: width .5s ease, height .5s ease, margin .5s ease, opacity .5s ease;
+  }
+  .center.compact .ring {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 12px;
+  }
+  .ring::before, .ring::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, #6366f1, #ec4899, #06b6d4, #a855f7, #6366f1);
+    animation: spin 6s linear infinite, breathe 4s ease-in-out infinite;
+  }
+  .ring::after {
+    inset: 12%;
+    background: #0b1220;
+    animation: none;
+    box-shadow: 0 0 60px rgba(99,102,241,0.5) inset;
+  }
+  .ring-core {
+    position: absolute;
+    inset: 24%;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #ec4899);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 700;
+    font-size: 28px;
+    letter-spacing: 0.04em;
+    box-shadow: 0 0 40px rgba(236,72,153,0.4);
+    animation: breathe 4s ease-in-out infinite;
+  }
+  .center.compact .ring-core { font-size: 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes breathe {
+    0%,100% { transform: scale(1); filter: brightness(1); }
+    50%     { transform: scale(1.06); filter: brightness(1.18); }
+  }
+
+  .title {
+    color: #f1f5f9;
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 0 0 8px;
+  }
+  .center.compact .title { font-size: 18px; }
+  .subtitle {
+    color: #94a3b8;
+    font-size: 15px;
+    margin: 0 0 28px;
+  }
+  .center.compact .subtitle { display: none; }
+
+  .search-wrap {
+    position: relative;
+    width: min(640px, 92vw);
+    margin: 0 auto;
+  }
+  #search {
+    width: 100%;
+    height: 56px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(8px);
+    color: #f1f5f9;
+    font-size: 16px;
+    padding: 0 60px 0 56px;
+    outline: none;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.6), 0 0 0 1px rgba(99,102,241,0.0);
+    transition: box-shadow .25s ease, border-color .25s ease;
+  }
+  #search:focus {
+    border-color: rgba(99,102,241,0.6);
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.6), 0 0 0 4px rgba(99,102,241,0.18);
+  }
+  .search-wrap .icn {
+    position: absolute;
+    top: 50%;
+    left: 20px;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    pointer-events: none;
+  }
+  .search-wrap .clear {
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: #94a3b8;
+    cursor: pointer;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .search-wrap .clear:hover { background: rgba(255,255,255,0.06); color: #f1f5f9; }
+  .has-text .clear { display: inline-flex; }
+
+  .hints {
+    margin-top: 18px;
+    color: #94a3b8;
+    font-size: 13px;
+    text-align: center;
+  }
+  .hints .chip {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+    margin: 2px 3px;
+    font-size: 11px;
+    color: #cbd5e1;
+    cursor: pointer;
+    transition: background .15s ease;
+  }
+  .hints .chip:hover { background: rgba(99,102,241,0.18); color: #fff; }
+
+  /* ============================================================
+     RESULTS
+  ============================================================ */
+  .results {
+    position: relative;
+    z-index: 2;
+    width: min(960px, 96vw);
+    margin: 28px auto 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+  .results-status {
+    position: relative;
+    z-index: 2;
+    width: min(960px, 96vw);
+    margin: 24px auto 0;
+    color: #94a3b8;
+    font-size: 13px;
+    text-align: center;
+    min-height: 18px;
+  }
+
+  .card {
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 14px 16px;
+    color: #e2e8f0;
+    transition: transform .15s ease, border-color .15s ease, background .15s ease;
+  }
+  .card:hover {
+    transform: translateY(-1px);
+    border-color: rgba(99,102,241,0.4);
+    background: rgba(15, 23, 42, 0.85);
+  }
+  .card .top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .card .acro {
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: 0.02em;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .card .acro mark {
+    background: rgba(99,102,241,0.35);
+    color: #fff;
+    padding: 0 1px;
+    border-radius: 3px;
+  }
+  .card .verified, .card .unverified {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+  }
+  .card .verified {
+    background: rgba(34,197,94,0.18);
+    color: #86efac;
+    border-color: rgba(34,197,94,0.35);
+  }
+  .card .unverified {
+    background: rgba(148,163,184,0.18);
+    color: #cbd5e1;
+    border-color: rgba(148,163,184,0.30);
+  }
+  .card .verified svg, .card .unverified svg { display: block; }
+  .card .cat {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 999px;
+    flex-shrink: 0;
+  }
+  .card .full {
+    color: #cbd5e1;
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0 0 4px;
+  }
+  .card .full mark { background: rgba(99,102,241,0.25); color: #f1f5f9; padding: 0 1px; border-radius: 3px; }
+  .card .desc {
+    color: #94a3b8;
+    font-size: 12px;
+    line-height: 1.5;
+    margin: 0;
+  }
+  .card .desc mark { background: rgba(236,72,153,0.25); color: #f1f5f9; padding: 0 1px; border-radius: 3px; }
+
+  /* Category palette */
+  .cat-program   { background: rgba(16,185,129,0.18); color: #6ee7b7; }
+  .cat-agency    { background: rgba(59,130,246,0.18); color: #93c5fd; }
+  .cat-people    { background: rgba(168,85,247,0.18); color: #d8b4fe; }
+  .cat-tech      { background: rgba(6,182,212,0.18); color: #67e8f9; }
+  .cat-cloud     { background: rgba(99,102,241,0.18); color: #a5b4fc; }
+  .cat-security  { background: rgba(239,68,68,0.20); color: #fca5a5; }
+  .cat-compliance{ background: rgba(245,158,11,0.20); color: #fcd34d; }
+  .cat-devops    { background: rgba(20,184,166,0.18); color: #5eead4; }
+  .cat-doc       { background: rgba(244,114,182,0.18); color: #f9a8d4; }
+  .cat-data      { background: rgba(132,204,22,0.18); color: #bef264; }
+  .cat-ui        { background: rgba(251,146,60,0.18); color: #fdba74; }
+  .cat-net       { background: rgba(14,165,233,0.18); color: #7dd3fc; }
+  .cat-general   { background: rgba(148,163,184,0.20); color: #cbd5e1; }
+
+  /* ============================================================
+     TABLE / BROWSE-ALL VIEW
+  ============================================================ */
+  .browse-toggle {
+    margin-top: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #cbd5e1;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background .15s, border-color .15s, color .15s;
+  }
+  .browse-toggle:hover {
+    background: rgba(99,102,241,0.18);
+    border-color: rgba(99,102,241,0.4);
+    color: #fff;
+  }
+
+  .browse {
+    position: relative;
+    z-index: 2;
+    width: min(1200px, 96vw);
+    margin: 28px auto 0;
+    display: none;
+  }
+  body.mode-browse .browse { display: block; }
+  body.mode-browse .center,
+  body.mode-browse .results,
+  body.mode-browse .results-status { display: none; }
+  body.mode-browse .pulse-bg { opacity: 0.10; }
+
+  .browse-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background: rgba(15,23,42,0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+  }
+  .browse-header h2 {
+    margin: 0;
+    color: #f1f5f9;
+    font-size: 18px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .browse-header h2 .total-pill {
+    font-size: 11px;
+    font-weight: 600;
+    color: #cbd5e1;
+    background: rgba(99,102,241,0.18);
+    border: 1px solid rgba(99,102,241,0.35);
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+  .back-search {
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.04);
+    color: #cbd5e1;
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+  }
+  .back-search:hover { background: rgba(99,102,241,0.18); color: #fff; }
+
+  .browse-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding: 12px 16px;
+    background: rgba(15,23,42,0.6);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+  }
+  .browse-filters input,
+  .browse-filters select {
+    background: rgba(15,23,42,0.7);
+    border: 1px solid rgba(255,255,255,0.14);
+    color: #f1f5f9;
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    outline: none;
+  }
+  .browse-filters input:focus,
+  .browse-filters select:focus { border-color: rgba(99,102,241,0.6); }
+  .browse-filters label {
+    font-size: 11px;
+    color: #94a3b8;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.04);
+    color: #cbd5e1;
+    font-size: 11px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .filter-chip.active {
+    background: rgba(99,102,241,0.30);
+    border-color: rgba(99,102,241,0.6);
+    color: #fff;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+    background: rgba(15,23,42,0.7);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+  }
+  .acro-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    color: #e2e8f0;
+  }
+  .acro-table thead th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #94a3b8;
+    padding: 12px 14px;
+    background: rgba(255,255,255,0.04);
+    border-bottom: 1px solid rgba(255,255,255,0.10);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+  .acro-table thead th:hover { color: #f1f5f9; }
+  .acro-table thead th .sort-ind {
+    display: inline-block;
+    opacity: 0.4;
+    margin-left: 4px;
+  }
+  .acro-table thead th.sort-asc .sort-ind,
+  .acro-table thead th.sort-desc .sort-ind { opacity: 1; color: #a5b4fc; }
+  .acro-table tbody tr {
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    transition: background .12s;
+  }
+  .acro-table tbody tr:hover { background: rgba(99,102,241,0.07); }
+  .acro-table td {
+    padding: 10px 14px;
+    vertical-align: top;
+  }
+  .acro-table td.acro-col {
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+  }
+  .acro-table td.full-col { color: #cbd5e1; min-width: 200px; }
+  .acro-table td.desc-col { color: #94a3b8; font-size: 12px; line-height: 1.5; }
+  .acro-table td.cat-col { text-align: center; }
+  .acro-table td.ver-col { text-align: center; white-space: nowrap; }
+  .acro-table .tcat {
+    display: inline-block;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 999px;
+  }
+  .ver-dot {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 999px;
+  }
+  .ver-dot.yes { background: rgba(34,197,94,0.18); color: #86efac; border: 1px solid rgba(34,197,94,0.35); }
+  .ver-dot.no  { background: rgba(148,163,184,0.18); color: #cbd5e1; border: 1px solid rgba(148,163,184,0.3); }
+
+  .pager {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+    padding: 12px 16px;
+    background: rgba(15,23,42,0.6);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    color: #cbd5e1;
+    font-size: 12px;
+  }
+  .pager .group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .pager button {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.14);
+    color: #cbd5e1;
+    padding: 5px 11px;
+    border-radius: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    min-width: 34px;
+  }
+  .pager button:hover:not(:disabled) {
+    background: rgba(99,102,241,0.18);
+    color: #fff;
+    border-color: rgba(99,102,241,0.4);
+  }
+  .pager button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+  .pager button.curr {
+    background: rgba(99,102,241,0.4);
+    color: #fff;
+    border-color: rgba(99,102,241,0.6);
+  }
+  .pager input.jump {
+    width: 60px;
+    background: rgba(15,23,42,0.7);
+    border: 1px solid rgba(255,255,255,0.14);
+    color: #f1f5f9;
+    padding: 5px 8px;
+    border-radius: 8px;
+    font-size: 12px;
+    text-align: center;
+  }
+
+  /* Footer */
+  .footer {
+    position: relative;
+    z-index: 2;
+    margin-top: 40px;
+    color: #475569;
+    font-size: 11px;
+    text-align: center;
+  }
+
+  /* Tiny "kbd" hint pill */
+  kbd {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.1);
+    color: #cbd5e1;
+    border: 1px solid rgba(255,255,255,0.12);
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px;
+  }
+
+  @media (max-width: 480px) {
+    .center { padding-top: 12vh; }
+    .ring { width: 160px; height: 160px; }
+    .title { font-size: 24px; }
+    .subtitle { font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Animated gradient pulse background -->
+  <div class="pulse-bg" id="pulseBg" aria-hidden="true">
+    <div class="blob blob-c"></div>
+    <div class="blob blob-d"></div>
+    <div class="blob blob-e"></div>
+  </div>
+
+  <!-- Centered search + idle pulse -->
+  <div class="center" id="center">
+    <div class="ring" aria-hidden="true">
+      <div class="ring-core">HANA</div>
+    </div>
+    <h1 class="title">HANA Acronyms</h1>
+    <p class="subtitle">Start typing to search across <span id="totalCount">…</span> acronyms — functional, non-functional, technical, security, compliance, and program. Entries from the official HM Project list are marked <span class="kbd" style="background:rgba(34,197,94,0.2); color:#86efac; padding:1px 6px; border-radius:999px; font-size:10px;">✓ Verified</span>; others await confirmation by technical writers / PM.</p>
+
+    <div class="search-wrap" id="searchWrap">
+      <svg class="icn" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="search" type="search" placeholder="Try TANF, FedRAMP, MDA, Dataverse, BESSD…" autocomplete="off" spellcheck="false" autofocus>
+      <button class="clear" id="clearBtn" aria-label="Clear" title="Clear (Esc)">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="hints">
+      Try:
+      <span class="chip" data-q="SNAP">SNAP</span>
+      <span class="chip" data-q="GCC">GCC</span>
+      <span class="chip" data-q="FedRAMP">FedRAMP</span>
+      <span class="chip" data-q="MDA">MDA</span>
+      <span class="chip" data-q="UAM">UAM</span>
+      <span class="chip" data-q="NIST">NIST</span>
+      <span class="chip" data-q="Dataverse">Dataverse</span>
+    </div>
+
+    <button class="browse-toggle" id="browseToggleBtn" type="button" title="Open the paginated tabular view">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      Browse all <span id="browseCount" style="font-weight:700">…</span> in a table →
+    </button>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- BROWSE / TABLE VIEW                                          -->
+  <!-- ============================================================ -->
+  <section class="browse" id="browse" aria-label="All acronyms (tabular)">
+
+    <div class="browse-header">
+      <h2>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+        All Acronyms
+        <span class="total-pill" id="browseTotalPill">…</span>
+      </h2>
+      <button class="back-search" id="backSearchBtn" type="button" title="Return to search">
+        ← Back to search
+      </button>
+    </div>
+
+    <div class="browse-filters">
+      <input id="tableFilter" type="search" placeholder="Filter (acronym, full form, or description)…" style="flex: 1; min-width: 240px;" autocomplete="off" spellcheck="false">
+      <label>Category</label>
+      <select id="catFilter">
+        <option value="">All</option>
+      </select>
+      <label>Verified</label>
+      <span class="filter-chip active" data-vfilter="all">All</span>
+      <span class="filter-chip" data-vfilter="yes">✓ Verified only</span>
+      <span class="filter-chip" data-vfilter="no">Unverified only</span>
+      <label style="margin-left:auto">Per page</label>
+      <select id="pageSize">
+        <option>25</option>
+        <option selected>50</option>
+        <option>100</option>
+        <option>200</option>
+      </select>
+    </div>
+
+    <div class="table-wrap">
+      <table class="acro-table" id="acroTable">
+        <thead>
+          <tr>
+            <th data-sort="a" style="width: 130px;">Acronym <span class="sort-ind">↕</span></th>
+            <th data-sort="f">Full form / source term <span class="sort-ind">↕</span></th>
+            <th data-sort="c" style="width: 110px;">Category <span class="sort-ind">↕</span></th>
+            <th data-sort="v" style="width: 110px;">Verified <span class="sort-ind">↕</span></th>
+            <th data-sort="d">Description / notes <span class="sort-ind">↕</span></th>
+          </tr>
+        </thead>
+        <tbody id="acroTbody"></tbody>
+      </table>
+    </div>
+
+    <div class="pager" id="pager">
+      <div class="group" id="pagerInfo">—</div>
+      <div class="group" id="pagerButtons"></div>
+      <div class="group">
+        Jump to <input id="jumpPage" class="jump" type="number" min="1" value="1" />
+      </div>
+    </div>
+  </section>
+
+  <div class="results-status" id="status" aria-live="polite"></div>
+  <div class="results" id="results" role="list"></div>
+
+  <div class="footer">
+    Hawai'i DHS · HANA Modernization · single-file acronym dictionary · works offline (file://)
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   DATA — every acronym in the project
+============================================================ */
+const ACRONYMS = [
+  { a:"A-SBA", f:"Assistant Branch Administrator", c:"agency", d:"From HM Project documentation (verified). Assistant Branch Administrator.", v:true },
+  { a:"AABD", f:"Aid to the Aged, Blind, and Disabled", c:"program", d:"State supplement to federal SSI for elderly/blind/disabled Hawai'i residents.", v:false },
+  { a:"AABD", f:"Assistance to the Aged, Blind, and Disabled", c:"program", d:"From HM Project documentation (verified). Assistance to the Aged, Blind, and Disabled.", v:true },
+  { a:"AAD", f:"Azure Active Directory", c:"cloud", d:"Legacy name for Microsoft Entra ID.", v:false },
+  { a:"AAN", f:"Adverse Action Notice", c:"doc", d:"From HM Project documentation (verified). Adverse Action Notice.", v:true },
+  { a:"AAO", f:"Administrative Appeals Office", c:"general", d:"From HM Project documentation (verified). Administrative Appeals Office.", v:true },
+  { a:"ABAWD", f:"Able-Bodied Adult Without Dependents", c:"general", d:"From HM Project documentation (verified). Able-Bodied Adult Without Dependents.", v:true },
+  { a:"ABESSDA", f:"Assistant BESSD Administrator", c:"agency", d:"From HM Project documentation (verified). Assistant BESSD Administrator.", v:true },
+  { a:"AC", f:"access control", c:"compliance", d:"From HM Project documentation (verified). access control.", v:true },
+  { a:"AC", f:"Access Control (NIST family)", c:"compliance", d:"NIST 800-53 family of controls: AC-2 (Account Mgmt), AC-2(4) (Auto Disable), AC-3, AC-6, etc.", v:false },
+  { a:"ACA", f:"Patient Protection and Affordable Care Act", c:"compliance", d:"From HM Project documentation (verified). Patient Protection and Affordable Care Act.", v:true },
+  { a:"ACF", f:"Administration for Children and Families", c:"agency", d:"Federal agency overseeing TANF and CCDF programs.", v:true },
+  { a:"ACH", f:"Automated Clearing House", c:"general", d:"From HM Project documentation (verified). Automated Clearing House.", v:true },
+  { a:"ACIP", f:"Advisory Committee on Immunization Practices", c:"agency", d:"From HM Project documentation (verified). Advisory Committee on Immunization Practices.", v:true },
+  { a:"ACL", f:"Access Control List", c:"security", d:"From HM Project documentation (verified). Access Control List.", v:true },
+  { a:"ACS", f:"Affiliated Computer Services", c:"general", d:"From HM Project documentation (verified). Affiliated Computer Services.", v:true },
+  { a:"AD", f:"Active Directory", c:"people", d:"From HM Project documentation (verified). Active Directory.", v:true },
+  { a:"AD", f:"Administrative Directives", c:"general", d:"From HM Project documentation (verified). Administrative Directives.", v:true },
+  { a:"ad hoc", f:"For this (when necessary or needed); not capitalized, and not hyphenated", c:"general", d:"From HM Project documentation (verified). For this (when necessary or needed); not capitalized, and not hyphenated.", v:true },
+  { a:"ADA", f:"American with Disabilities Act", c:"compliance", d:"From HM Project documentation (verified). American with Disabilities Act.", v:true },
+  { a:"ADAAG", f:"Disabilities Act Accessibility Guidelines", c:"compliance", d:"From HM Project documentation (verified). Disabilities Act Accessibility Guidelines.", v:true },
+  { a:"Adabas", f:"adaptable database system", c:"data", d:"From HM Project documentation (verified). adaptable database system.", v:true },
+  { a:"ADF", f:"Azure Data Factory", c:"cloud", d:"Cloud ETL service for the Oracle→Dataverse migration pipelines.", v:false },
+  { a:"ADFS", f:"Active Directory Federation Services", c:"security", d:"DHS federation gateway (ETS-managed) handling DHS PIV/CAC user sign-in.", v:true },
+  { a:"ADH", f:"Administrative Disqualification Hearing", c:"general", d:"From HM Project documentation (verified). Administrative Disqualification Hearing.", v:true },
+  { a:"ADKAR", f:"awareness, desire, knowledge, ability, and reinforcement", c:"net", d:"From HM Project documentation (verified). awareness, desire, knowledge, ability, and reinforcement.", v:true },
+  { a:"ADLS", f:"Azure Data Lake Storage", c:"cloud", d:"Hierarchical-namespace blob storage. Synapse Link export target. Delta Lake format.", v:false },
+  { a:"ADP", f:"actual deferral percentage", c:"general", d:"From HM Project documentation (verified). actual deferral percentage.", v:true },
+  { a:"ADRC", f:"Aid to the Disabled Review Committee", c:"agency", d:"From HM Project documentation (verified). Aid to the Disabled Review Committee.", v:true },
+  { a:"ADS", f:"administrative disqualification staff", c:"general", d:"From HM Project documentation (verified). administrative disqualification staff.", v:true },
+  { a:"AES", f:"advanced encryption standard", c:"security", d:"From HM Project documentation (verified). advanced encryption standard.", v:true },
+  { a:"AFDC", f:"Aid to Families with Dependent Children", c:"general", d:"From HM Project documentation (verified). Aid to Families with Dependent Children.", v:true },
+  { a:"AG", f:"(State of Hawaii) Attorney General", c:"agency", d:"From HM Project documentation (verified). (State of Hawaii) Attorney General.", v:true },
+  { a:"AH", f:"Administrative Hearing (aka Fair Hearing)", c:"general", d:"From HM Project documentation (verified). Administrative Hearing (aka Fair Hearing).", v:true },
+  { a:"AHCCCS", f:"Arizona Health Care Cost Containment System", c:"general", d:"From HM Project documentation (verified). Arizona Health Care Cost Containment System.", v:true },
+  { a:"AHT", f:"Abusive Head Trauma", c:"general", d:"From HM Project documentation (verified). Abusive Head Trauma.", v:true },
+  { a:"AIA", f:"application integration architecture", c:"people", d:"From HM Project documentation (verified). application integration architecture.", v:true },
+  { a:"AIME", f:"average indexed monthly earnings", c:"general", d:"From HM Project documentation (verified). average indexed monthly earnings.", v:true },
+  { a:"AJC", f:"American Job Centre", c:"general", d:"From HM Project documentation (verified). American Job Centre.", v:true },
+  { a:"ALM", f:"Application Lifecycle Management", c:"cloud", d:"Power Platform promotion model: solution export → managed solution → environment promotion.", v:false },
+  { a:"ALM", f:"application lifecycle management (microfocus)", c:"cloud", d:"From HM Project documentation (verified). application lifecycle management (microfocus).", v:true },
+  { a:"AM", f:"Ante meridiem (before noon); AM can be used in informal writing as the formal term can set off auto-correct errors", c:"general", d:"From HM Project documentation (verified). Ante meridiem (before noon); AM can be used in informal writing as the formal term can set off auto-correct errors.", v:true },
+  { a:"AMI", f:"Association Montessori Internationale", c:"general", d:"From HM Project documentation (verified). Association Montessori Internationale.", v:true },
+  { a:"AMS", f:"Administrative Management Services", c:"general", d:"From HM Project documentation (verified). Administrative Management Services.", v:true },
+  { a:"AP", f:"absent parent", c:"people", d:"From HM Project documentation (verified). absent parent.", v:true },
+  { a:"AP", f:"accounts payable", c:"general", d:"From HM Project documentation (verified). accounts payable.", v:true },
+  { a:"APCSB", f:"Adult Protective and Community Services Branch Services", c:"agency", d:"From HM Project documentation (verified). Adult Protective and Community Services Branch Services.", v:true },
+  { a:"API", f:"application program interface", c:"tech", d:"From HM Project documentation (verified). application program interface.", v:true },
+  { a:"API", f:"Application Programming Interface", c:"tech", d:"Generic interface allowing software components to communicate.", v:false },
+  { a:"APIM", f:"Azure API Management", c:"cloud", d:"Internal API gateway. Sits between HM compute and Apigee external gateway.", v:false },
+  { a:"APO", f:"Army Post Office", c:"general", d:"From HM Project documentation (verified). Army Post Office.", v:true },
+  { a:"APRN", f:"Advanced Practice Registered Nurse", c:"general", d:"From HM Project documentation (verified). Advanced Practice Registered Nurse.", v:true },
+  { a:"APS", f:"Adult Protective Services (Adult Protective and Community Services Branch)", c:"agency", d:"From HM Project documentation (verified). Adult Protective Services (Adult Protective and Community Services Branch).", v:true },
+  { a:"APTC", f:"advanced premium tax credit", c:"general", d:"From HM Project documentation (verified). advanced premium tax credit.", v:true },
+  { a:"AQCRO", f:"Audit, Quality Control, and Research Office", c:"compliance", d:"From HM Project documentation (verified). Audit, Quality Control, and Research Office.", v:true },
+  { a:"AR", f:"accounts receivable", c:"general", d:"From HM Project documentation (verified). accounts receivable.", v:true },
+  { a:"AR", f:"authorized representative", c:"general", d:"From HM Project documentation (verified). authorized representative.", v:true },
+  { a:"ARCH", f:"adult residential care home", c:"general", d:"From HM Project documentation (verified). adult residential care home.", v:true },
+  { a:"ARICS", f:"Accounts Receivable Integrated Collections System", c:"general", d:"From HM Project documentation (verified). Accounts Receivable Integrated Collections System.", v:true },
+  { a:"ARRF", f:"ACH Return and Retire File", c:"general", d:"From HM Project documentation (verified). ACH Return and Retire File.", v:true },
+  { a:"AS2", f:"Applicability Statement 2", c:"general", d:"From HM Project documentation (verified). Applicability Statement 2.", v:true },
+  { a:"ASA", f:"Advanced Security Appliance", c:"general", d:"From HM Project documentation (verified). Advanced Security Appliance.", v:true },
+  { a:"ASAP", f:"As Soon As Possible", c:"general", d:"Best-effort urgency designation.", v:false },
+  { a:"ASC", f:"Child Care: After School Care", c:"general", d:"From HM Project documentation (verified). Child Care: After School Care.", v:true },
+  { a:"ASI", f:"application systems integrator", c:"general", d:"From HM Project documentation (verified). application systems integrator.", v:true },
+  { a:"ASI PMO", f:"Application Systems Integrator Project Management Office", c:"general", d:"From HM Project documentation (verified). Application Systems Integrator Project Management Office.", v:true },
+  { a:"ASK", f:"Attitudes, Skills and Knowledge (ASK core areas)", c:"net", d:"From HM Project documentation (verified). Attitudes, Skills and Knowledge (ASK core areas).", v:true },
+  { a:"ASQ", f:"Ages and Stages Questionnaire", c:"general", d:"From HM Project documentation (verified). Ages and Stages Questionnaire.", v:true },
+  { a:"ASR", f:"Appraisal Summary and Recommendations", c:"general", d:"From HM Project documentation (verified). Appraisal Summary and Recommendations.", v:true },
+  { a:"ATM", f:"Automated Teller Machine", c:"general", d:"From HM Project documentation (verified). Automated Teller Machine.", v:true },
+  { a:"ATO", f:"Authority to Operate", c:"compliance", d:"Formal authorization allowing a system to operate in a given security boundary.", v:true },
+  { a:"ATS", f:"applicant tracking system", c:"people", d:"From HM Project documentation (verified). applicant tracking system.", v:true },
+  { a:"AU", f:"Audit (NIST family)", c:"compliance", d:"NIST 800-53 family of controls: AU-2 (Auditable Events), AU-3 (Audit Content), AU-9 (Audit Protection).", v:false },
+  { a:"AWS", f:"Amazon Web Services", c:"cloud", d:"From HM Project documentation (verified). Amazon Web Services.", v:true },
+  { a:"B2C", f:"Business to Consumer", c:"cloud", d:"Azure AD B2C — external identity for citizen-facing apps (now part of Entra External ID).", v:true },
+  { a:"BA", f:"Barrier Assessment (FTW)", c:"people", d:"From HM Project documentation (verified). Barrier Assessment (FTW).", v:true },
+  { a:"BA", f:"Branch Administrator", c:"people", d:"From HM Project documentation (verified). Branch Administrator.", v:true },
+  { a:"BA", f:"Business Analyst", c:"people", d:"Project role responsible for requirements elicitation and documentation.", v:true },
+  { a:"BAS", f:"Before and After School Care (child care)", c:"general", d:"From HM Project documentation (verified). Before and After School Care (child care).", v:true },
+  { a:"BASM", f:"Before and After School Care - Military (child care)", c:"general", d:"From HM Project documentation (verified). Before and After School Care - Military (child care).", v:true },
+  { a:"BBCE", f:"Broad-Based Categorical Eligibility", c:"general", d:"From HM Project documentation (verified). Broad-Based Categorical Eligibility.", v:true },
+  { a:"BCC", f:"breast or cervical cancer", c:"general", d:"From HM Project documentation (verified). breast or cervical cancer.", v:true },
+  { a:"BCP", f:"Business Contingency Plan", c:"doc", d:"From HM Project documentation (verified). Business Contingency Plan.", v:true },
+  { a:"BEER", f:"Beneficiary Earnings Exchange Record", c:"general", d:"From HM Project documentation (verified). Beneficiary Earnings Exchange Record.", v:true },
+  { a:"BENDEX", f:"Beneficiary and Earnings Data Exchange", c:"general", d:"From HM Project documentation (verified). Beneficiary and Earnings Data Exchange.", v:true },
+  { a:"BES", f:"Benefits Eligibility Solution", c:"tech", d:"Sibling system to HANA — handles eligibility decisioning. Tightly integrated.", v:false },
+  { a:"BESSD", f:"(DHS') Benefit, Employment and Support Services Division", c:"agency", d:"From HM Project documentation (verified). (DHS') Benefit, Employment and Support Services Division.", v:true },
+  { a:"BESSD", f:"Benefit, Employment and Support Services Division", c:"agency", d:"Largest division of Hawai'i DHS — the primary owner of HANA. Runs ~10 federal/state assistance programs.", v:false },
+  { a:"BHH", f:"Behavioral Health (DOH)", c:"agency", d:"DOH behavioral-health and substance-use services.", v:false },
+  { a:"BIA", f:"Business Impact Analysis", c:"general", d:"From HM Project documentation (verified). Business Impact Analysis.", v:true },
+  { a:"BIP", f:"business intelligence publisher", c:"general", d:"From HM Project documentation (verified). business intelligence publisher.", v:true },
+  { a:"BLI", f:"benefit line item", c:"general", d:"From HM Project documentation (verified). benefit line item.", v:true },
+  { a:"BO", f:"business object", c:"general", d:"From HM Project documentation (verified). business object.", v:true },
+  { a:"BOM", f:"bill of materials", c:"general", d:"From HM Project documentation (verified). bill of materials.", v:true },
+  { a:"BOPM", f:"BESSD Operational Procedures Manual", c:"agency", d:"From HM Project documentation (verified). BESSD Operational Procedures Manual.", v:true },
+  { a:"BPA", f:"business process analysis", c:"general", d:"From HM Project documentation (verified). business process analysis.", v:true },
+  { a:"BPEL", f:"business process execution language", c:"net", d:"From HM Project documentation (verified). business process execution language.", v:true },
+  { a:"BPF", f:"Business Process Flow", c:"cloud", d:"Power Platform workflow-stage feature for guided multi-step processes.", v:true },
+  { a:"BPM", f:"business process management", c:"general", d:"From HM Project documentation (verified). business process management.", v:true },
+  { a:"BPMN", f:"business process model and notation", c:"general", d:"From HM Project documentation (verified). business process model and notation.", v:true },
+  { a:"BPMO", f:"Budget Planning Management Office", c:"net", d:"From HM Project documentation (verified). Budget Planning Management Office.", v:true },
+  { a:"BPR", f:"Business Process Re-engineering", c:"people", d:"From HM Project documentation (verified). Business Process Re-engineering.", v:true },
+  { a:"BRD", f:"Business Requirements Document", c:"doc", d:"Captures business needs that drive system features. Templates live under HM Mod BRD.", v:false },
+  { a:"BRE", f:"business rules engine", c:"general", d:"From HM Project documentation (verified). business rules engine.", v:true },
+  { a:"BRM", f:"business rules management", c:"general", d:"From HM Project documentation (verified). business rules management.", v:true },
+  { a:"BRP", f:"Barrier Reduction Plan", c:"doc", d:"From HM Project documentation (verified). Barrier Reduction Plan.", v:true },
+  { a:"BS", f:"business service", c:"general", d:"From HM Project documentation (verified). business service.", v:true },
+  { a:"BSC", f:"Child Care: Before School Care", c:"general", d:"From HM Project documentation (verified). Child Care: Before School Care.", v:true },
+  { a:"BU", f:"Business Unit", c:"data", d:"Dataverse organizational hierarchy element. Drives row-level ownership.", v:true },
+  { a:"BWE", f:"blind work expense", c:"general", d:"From HM Project documentation (verified). blind work expense.", v:true },
+  { a:"C!A", f:"Change and Innovation Agency", c:"agency", d:"From HM Project documentation (verified). Change and Innovation Agency.", v:true },
+  { a:"C&A", f:"certification and accreditation", c:"general", d:"From HM Project documentation (verified). certification and accreditation.", v:true },
+  { a:"CA", f:"certified authority", c:"general", d:"From HM Project documentation (verified). certified authority.", v:true },
+  { a:"CA", f:"The 2-letter code in HANA designating child care", c:"doc", d:"From HM Project documentation (verified). The 2-letter code in HANA designating child care.", v:true },
+  { a:"CAB", f:"Change Advisory Board", c:"general", d:"From HM Project documentation (verified). Change Advisory Board.", v:true },
+  { a:"CAC", f:"Common Access Card", c:"security", d:"DoD-equivalent smartcard (federal employees). Also supported via ADFS.", v:false },
+  { a:"CACFP", f:"Child and Adult Care Food Program", c:"program", d:"From HM Project documentation (verified). Child and Adult Care Food Program.", v:true },
+  { a:"CAN", f:"Child Abuse & Neglect Check", c:"general", d:"From HM Project documentation (verified). Child Abuse & Neglect Check.", v:true },
+  { a:"CAPA", f:"corrective and preventive actions", c:"general", d:"From HM Project documentation (verified). corrective and preventive actions.", v:true },
+  { a:"Cardinal", f:"Cardinal (Print/Mail Vendor)", c:"tech", d:"External print/mail service for outbound DHS notices and letters.", v:false },
+  { a:"CARS", f:"Child Care Automated Reporting System", c:"general", d:"From HM Project documentation (verified). Child Care Automated Reporting System.", v:true },
+  { a:"CBT", f:"computer-based training", c:"general", d:"From HM Project documentation (verified). computer-based training.", v:true },
+  { a:"CC", f:"communication and coordination", c:"general", d:"From HM Project documentation (verified). communication and coordination.", v:true },
+  { a:"CC", f:"controlled correspondence", c:"general", d:"From HM Project documentation (verified). controlled correspondence.", v:true },
+  { a:"CCA", f:"Child Care Application", c:"tech", d:"External-facing application for child-care benefit applications.", v:false },
+  { a:"CCA", f:"Child Care online Application (includes child care subsidy & POD)", c:"tech", d:"From HM Project documentation (verified). Child Care online Application (includes child care subsidy & POD).", v:true },
+  { a:"CCB", f:"Change Control Board", c:"devops", d:"Governance body reviewing/approving changes. Required for production changes.", v:true },
+  { a:"CCC", f:"Child Care Center (includes: GCC, GCH, IT and BAS facilities)", c:"general", d:"From HM Project documentation (verified). Child Care Center (includes: GCC, GCH, IT and BAS facilities).", v:true },
+  { a:"CCCH", f:"Child Care Connection Hawai'i (now called Child Care Subsidy)", c:"program", d:"From HM Project documentation (verified). Child Care Connection Hawai'i (now called Child Care Subsidy).", v:true },
+  { a:"CCDBG", f:"Child Care Development Block Grant", c:"general", d:"From HM Project documentation (verified). Child Care Development Block Grant.", v:true },
+  { a:"CCDF", f:"Child Care and Development Fund", c:"program", d:"Federal block grant supporting child-care subsidies for low-income working families.", v:true },
+  { a:"CCGA", f:"Child Care Grant Application (system; aka EYGA)", c:"general", d:"From HM Project documentation (verified). Child Care Grant Application (system; aka EYGA).", v:true },
+  { a:"CCL", f:"Child Care Licensing", c:"program", d:"DHS-managed licensing and oversight of childcare providers in Hawai'i.", v:false },
+  { a:"CCL", f:"Child Care Licensing program", c:"program", d:"From HM Project documentation (verified). Child Care Licensing program.", v:true },
+  { a:"CCLW", f:"Child Care Licensing Worker", c:"people", d:"From HM Project documentation (verified). Child Care Licensing Worker.", v:true },
+  { a:"CCPO", f:"Child Care Program Office", c:"program", d:"From HM Project documentation (verified). Child Care Program Office.", v:true },
+  { a:"CCR&R", f:"Child Care Resource and Referral (CCS process; PATCH)", c:"general", d:"From HM Project documentation (verified). Child Care Resource and Referral (CCS process; PATCH).", v:true },
+  { a:"CCRPO", f:"Child Care Regulations Program Office", c:"general", d:"From HM Project documentation (verified). Child Care Regulations Program Office.", v:true },
+  { a:"CCS", f:"Child Care Subsidies", c:"program", d:"DHS subsidy program paying licensed providers for childcare for low-income families.", v:false },
+  { a:"CCS", f:"Child Care Subsidy program", c:"program", d:"From HM Project documentation (verified). Child Care Subsidy program.", v:true },
+  { a:"CCSF", f:"Child Care Stabilization Grant", c:"general", d:"From HM Project documentation (verified). Child Care Stabilization Grant.", v:true },
+  { a:"CCSPO", f:"Child Care Subsidy Program Office", c:"program", d:"From HM Project documentation (verified). Child Care Subsidy Program Office.", v:true },
+  { a:"CCTAN", f:"Office of Child Care's Child Care Technical Assistance Network", c:"program", d:"From HM Project documentation (verified). Office of Child Care's Child Care Technical Assistance Network.", v:true },
+  { a:"CCWIS", f:"Comprehensive Child Welfare Information System", c:"program", d:"From HM Project documentation (verified). Comprehensive Child Welfare Information System.", v:true },
+  { a:"CDA", f:"Child development associate", c:"general", d:"From HM Project documentation (verified). Child development associate.", v:true },
+  { a:"CDC", f:"Change Data Capture", c:"data", d:"Tracks row-level changes in source DB for incremental sync.", v:false },
+  { a:"CDC", f:"Civil Defense Coordinator", c:"data", d:"From HM Project documentation (verified). Civil Defense Coordinator.", v:true },
+  { a:"CDS", f:"Common Data Service", c:"cloud", d:"Legacy name for Microsoft Dataverse — still seen in older docs and IDs.", v:false },
+  { a:"CE", f:"content engine", c:"general", d:"From HM Project documentation (verified). content engine.", v:true },
+  { a:"CECEP", f:"P20 Early Care & Education Pilot Program", c:"general", d:"From HM Project documentation (verified). P20 Early Care & Education Pilot Program.", v:true },
+  { a:"CEWS", f:"Content Engine Web Service", c:"general", d:"From HM Project documentation (verified). Content Engine Web Service.", v:true },
+  { a:"CFR", f:"Code of Federal Regulations", c:"general", d:"From HM Project documentation (verified). Code of Federal Regulations.", v:true },
+  { a:"CFS", f:"Child and Family Services", c:"general", d:"From HM Project documentation (verified). Child and Family Services.", v:true },
+  { a:"CHIP", f:"Children's Health Insurance Program", c:"general", d:"From HM Project documentation (verified). Children's Health Insurance Program.", v:true },
+  { a:"CI", f:"configuration item", c:"general", d:"From HM Project documentation (verified). configuration item.", v:true },
+  { a:"CI/CD", f:"Continuous Integration / Continuous Delivery", c:"devops", d:"Automated build-test-deploy pipeline. HM uses Azure DevOps pipelines.", v:false },
+  { a:"CI/CD", f:"continuous integration and continuous delivery/deployment", c:"devops", d:"From HM Project documentation (verified). continuous integration and continuous delivery/deployment.", v:true },
+  { a:"CIA", f:"Change Impact Analysis", c:"general", d:"From HM Project documentation (verified). Change Impact Analysis.", v:true },
+  { a:"CICS", f:"Customer Information Control System", c:"general", d:"From HM Project documentation (verified). Customer Information Control System.", v:true },
+  { a:"CIO", f:"chief information officer", c:"people", d:"From HM Project documentation (verified). chief information officer.", v:true },
+  { a:"CIS", f:"Center for Internet Security", c:"general", d:"From HM Project documentation (verified). Center for Internet Security.", v:true },
+  { a:"CISO", f:"chief information security officer", c:"people", d:"From HM Project documentation (verified). chief information security officer.", v:true },
+  { a:"CJIS", f:"Hawai'i's Criminal Justice Information System", c:"general", d:"From HM Project documentation (verified). Hawai'i's Criminal Justice Information System.", v:true },
+  { a:"CLI", f:"Command Line Interface", c:"devops", d:"Text-based interface (e.g., pac CLI for Power Platform, az CLI for Azure).", v:false },
+  { a:"CLIAS", f:"Clinical Laboratory Improvement Act", c:"compliance", d:"From HM Project documentation (verified). Clinical Laboratory Improvement Act.", v:true },
+  { a:"CLOB", f:"character large object", c:"general", d:"From HM Project documentation (verified). character large object.", v:true },
+  { a:"CLPR", f:"client profile screen (HAWI)", c:"people", d:"From HM Project documentation (verified). client profile screen (HAWI).", v:true },
+  { a:"CM", f:"Common Module", c:"program", d:"Module [06] containing Use Case + Technical Design for shared functionality (e.g., contact log).", v:false },
+  { a:"CM", f:"configuration management", c:"compliance", d:"From HM Project documentation (verified). configuration management.", v:true },
+  { a:"CM", f:"Configuration Management (NIST family)", c:"compliance", d:"NIST 800-53 family covering change control, baselines, inventories.", v:false },
+  { a:"CMDB", f:"configuration management database", c:"devops", d:"From HM Project documentation (verified). configuration management database.", v:true },
+  { a:"CMF", f:"Common Modernization Functionalities", c:"program", d:"Cross-cutting use cases reused across all 17 domain modules (CMF01–CMF30; ~17 published).", v:false },
+  { a:"CMK", f:"Customer-Managed Key", c:"security", d:"Encryption key owned/rotated by the customer rather than the cloud vendor (vs MMK).", v:false },
+  { a:"CMM", f:"case management module", c:"general", d:"From HM Project documentation (verified). case management module.", v:true },
+  { a:"CMP", f:"Configuration Management Plan", c:"doc", d:"Defines how configuration items, environments, and releases are managed.", v:true },
+  { a:"CMS", f:"Centers for Medicare and Medicaid Services", c:"agency", d:"Federal agency overseeing Medicaid. Med-QUEST division of DHS reports to CMS.", v:true },
+  { a:"CNA", f:"Certified Nurse Aid", c:"general", d:"From HM Project documentation (verified). Certified Nurse Aid.", v:true },
+  { a:"COC", f:"change of circumstance", c:"general", d:"From HM Project documentation (verified). change of circumstance.", v:true },
+  { a:"CODEX", f:"CODEX (React+Java pro-code module)", c:"program", d:"Pro-code escape-hatch app (React + Java) on Azure App Service for use cases beyond low-code.", v:false },
+  { a:"COF", f:"Center on the Family", c:"general", d:"From HM Project documentation (verified). Center on the Family.", v:true },
+  { a:"COFA", f:"Compact Of Free Association", c:"general", d:"From HM Project documentation (verified). Compact Of Free Association.", v:true },
+  { a:"COLA", f:"cost-of-living adjustment", c:"general", d:"From HM Project documentation (verified). cost-of-living adjustment.", v:true },
+  { a:"COM", f:"Component Object Model", c:"general", d:"From HM Project documentation (verified). Component Object Model.", v:true },
+  { a:"cont.", f:"Continued should be spelled out in formal writing", c:"general", d:"From HM Project documentation (verified). Continued should be spelled out in formal writing.", v:true },
+  { a:"COOP", f:"continuity of operations plan", c:"doc", d:"From HM Project documentation (verified). continuity of operations plan.", v:true },
+  { a:"COPP", f:"Committee on Payment Projections", c:"agency", d:"From HM Project documentation (verified). Committee on Payment Projections.", v:true },
+  { a:"COTS", f:"commercial off-the-shelf", c:"general", d:"From HM Project documentation (verified). commercial off-the-shelf.", v:true },
+  { a:"CP", f:"contingency plan", c:"doc", d:"From HM Project documentation (verified). contingency plan.", v:true },
+  { a:"CPE", f:"customer premises equipment", c:"general", d:"From HM Project documentation (verified). customer premises equipment.", v:true },
+  { a:"CPR", f:"cardiopulmonary resuscitation", c:"general", d:"From HM Project documentation (verified). cardiopulmonary resuscitation.", v:true },
+  { a:"CPS", f:"Child Protective Services", c:"general", d:"From HM Project documentation (verified). Child Protective Services.", v:true },
+  { a:"CPSS", f:"Child Protect Social Services", c:"tech", d:"Child welfare system. Cross-references with HANA for case-aware decisioning.", v:false },
+  { a:"CPSS", f:"Child Protective Services System", c:"tech", d:"From HM Project documentation (verified). Child Protective Services System.", v:true },
+  { a:"CPU", f:"central processing unit", c:"general", d:"From HM Project documentation (verified). central processing unit.", v:true },
+  { a:"CR", f:"change request", c:"devops", d:"From HM Project documentation (verified). change request.", v:true },
+  { a:"CR", f:"connection reference", c:"general", d:"From HM Project documentation (verified). connection reference.", v:true },
+  { a:"CRM", f:"customer relationship management", c:"net", d:"From HM Project documentation (verified). customer relationship management.", v:true },
+  { a:"CRS", f:"Collection and Recovery Section", c:"general", d:"From HM Project documentation (verified). Collection and Recovery Section.", v:true },
+  { a:"CRUD", f:"create, read, update, and delete", c:"data", d:"From HM Project documentation (verified). create, read, update, and delete.", v:true },
+  { a:"CRUD", f:"Create, Read, Update, Delete", c:"data", d:"The 4 basic data operations. Dataverse security roles configure per-CRUD privileges.", v:false },
+  { a:"CSEA", f:"Child Support Enforcement Agency", c:"program", d:"From HM Project documentation (verified). Child Support Enforcement Agency.", v:true },
+  { a:"CSF", f:"critical success factor", c:"general", d:"From HM Project documentation (verified). critical success factor.", v:true },
+  { a:"CSP", f:"cloud service provider", c:"cloud", d:"From HM Project documentation (verified). cloud service provider.", v:true },
+  { a:"CSR", f:"cost sharing reductions", c:"general", d:"From HM Project documentation (verified). cost sharing reductions.", v:true },
+  { a:"CSS", f:"cascading style sheets", c:"agency", d:"From HM Project documentation (verified). cascading style sheets.", v:true },
+  { a:"CSS", f:"content search services", c:"general", d:"From HM Project documentation (verified). content search services.", v:true },
+  { a:"CSV", f:"Comma-Separated Values", c:"data", d:"Plain-text tabular file format. Used by Cardinal, FIS, FAMIS feeds.", v:false },
+  { a:"CTR", f:"Contractor", c:"people", d:"From HM Project documentation (verified). Contractor.", v:true },
+  { a:"CWS", f:"Child Welfare Services", c:"program", d:"From HM Project documentation (verified). Child Welfare Services.", v:true },
+  { a:"D-SNAP", f:"Disaster Supplemental Nutrition Assistance Program", c:"program", d:"From HM Project documentation (verified). Disaster Supplemental Nutrition Assistance Program.", v:true },
+  { a:"DAC", f:"data warehouse application console", c:"data", d:"From HM Project documentation (verified). data warehouse application console.", v:true },
+  { a:"DAD", f:"deliverable acceptance document", c:"doc", d:"From HM Project documentation (verified). deliverable acceptance document.", v:true },
+  { a:"DAD", f:"Design Architecture Document", c:"doc", d:"High-level architecture-design artifact (sometimes paired with TDD).", v:false },
+  { a:"DAF", f:"Disability Analysis File", c:"general", d:"From HM Project documentation (verified). Disability Analysis File.", v:true },
+  { a:"DAGS", f:"Department of Accounting and General Services", c:"agency", d:"State of Hawai'i agency managing state financial systems.", v:true },
+  { a:"DB", f:"database", c:"data", d:"From HM Project documentation (verified). database.", v:true },
+  { a:"DBA", f:"Database Administrator", c:"people", d:"Manages database design, performance, and operations.", v:true },
+  { a:"DBEDT", f:"Department of Business, Economic Development and Tourism", c:"agency", d:"From HM Project documentation (verified). Department of Business, Economic Development and Tourism.", v:true },
+  { a:"DCAB", f:"Disability and Communication Access Board", c:"general", d:"From HM Project documentation (verified). Disability and Communication Access Board.", v:true },
+  { a:"DCF", f:"document comment form", c:"doc", d:"From HM Project documentation (verified). document comment form.", v:true },
+  { a:"DCINT", f:"data conversion intermediate Oracle database", c:"data", d:"From HM Project documentation (verified). data conversion intermediate Oracle database.", v:true },
+  { a:"DCMA", f:"Defense Contract Management Agency", c:"agency", d:"From HM Project documentation (verified). Defense Contract Management Agency.", v:true },
+  { a:"DCPIT", f:"data conversion point-in-time Oracle database", c:"data", d:"From HM Project documentation (verified). data conversion point-in-time Oracle database.", v:true },
+  { a:"DCRT", f:"data conversion replication and transformation", c:"general", d:"From HM Project documentation (verified). data conversion replication and transformation.", v:true },
+  { a:"DDB", f:"Disability Determination Bureau (SSA Department)", c:"general", d:"From HM Project documentation (verified). Disability Determination Bureau (SSA Department).", v:true },
+  { a:"DDI", f:"design, development, and implementation", c:"general", d:"From HM Project documentation (verified). design, development, and implementation.", v:true },
+  { a:"DDIR", f:"DHS' Deputy Director", c:"agency", d:"From HM Project documentation (verified). DHS' Deputy Director.", v:true },
+  { a:"DDoS", f:"Distributed Denial of Service", c:"net", d:"Volumetric attack. Azure DDoS Protection mitigates at the platform layer.", v:false },
+  { a:"DED", f:"Deliverable Expectation Document", c:"doc", d:"DHS contract artifact defining the scope/expectations of each project deliverable.", v:true },
+  { a:"DEERS", f:"Defense Enrollment Eligibility Reporting System", c:"general", d:"From HM Project documentation (verified). Defense Enrollment Eligibility Reporting System.", v:true },
+  { a:"DFD", f:"data flow diagram", c:"general", d:"From HM Project documentation (verified). data flow diagram.", v:true },
+  { a:"DHHS", f:"U.S. Department of Health and Human Services", c:"agency", d:"From HM Project documentation (verified). U.S. Department of Health and Human Services.", v:true },
+  { a:"DHS", f:"Department of Homeland Security", c:"agency", d:"From HM Project documentation (verified). Department of Homeland Security.", v:true },
+  { a:"DHS", f:"Department of Human Services", c:"agency", d:"State of Hawai'i agency owning HANA and the safety-net programs (SNAP, TANF, child care, etc.).", v:false },
+  { a:"DHS", f:"Department of Human Services (State of Hawai'i)", c:"agency", d:"From HM Project documentation (verified). Department of Human Services (State of Hawai'i).", v:true },
+  { a:"DHS", f:"Department of Human Services is the default term for HANA project documents. Spell out other \"DHS\" terms, such as Department of Homeland Security, if used in project documentation.", c:"agency", d:"From HM Project documentation (verified). Department of Human Services is the default term for HANA project documents. Spell out other \"DHS\" terms, such as Department of Homeland Security, if used in project documentation..", v:true },
+  { a:"DHS 1240", f:"Application for financial and SNAP assistance", c:"program", d:"From HM Project documentation (verified). Application for financial and SNAP assistance.", v:true },
+  { a:"DHS 5000", f:"Offer and acceptance or waiver of free interpreter services", c:"general", d:"From HM Project documentation (verified). Offer and acceptance or waiver of free interpreter services.", v:true },
+  { a:"DHS 5050", f:"Interpreter form and code of ethics", c:"doc", d:"From HM Project documentation (verified). Interpreter form and code of ethics.", v:true },
+  { a:"DHS 990", f:"Notice of termination or reduction of payment", c:"doc", d:"From HM Project documentation (verified). Notice of termination or reduction of payment.", v:true },
+  { a:"DHS PMO", f:"Department of Human Services Program Management Office", c:"agency", d:"From HM Project documentation (verified). Department of Human Services Program Management Office.", v:true },
+  { a:"DI", f:"disability insurance", c:"general", d:"From HM Project documentation (verified). disability insurance.", v:true },
+  { a:"DIR", f:"DHS' Director", c:"agency", d:"From HM Project documentation (verified). DHS' Director.", v:true },
+  { a:"DLIR", f:"Department of Labor and Industrial Relations", c:"agency", d:"From HM Project documentation (verified). Department of Labor and Industrial Relations.", v:true },
+  { a:"DLP", f:"Data Loss Prevention", c:"cloud", d:"Power Platform policy framework — restricts which connectors can be used together.", v:true },
+  { a:"DMDC", f:"Defense Manpower Data Center", c:"general", d:"From HM Project documentation (verified). Defense Manpower Data Center.", v:true },
+  { a:"DMZ", f:"demilitarized zone", c:"general", d:"From HM Project documentation (verified). demilitarized zone.", v:true },
+  { a:"DNS", f:"Domain Name System", c:"net", d:"Resolves hostnames to IPs. Private DNS zones used in Azure Hub VNets.", v:true },
+  { a:"DNU", f:"Do Not Use", c:"general", d:"From HM Project documentation (verified). Do Not Use.", v:true },
+  { a:"DOB", f:"date of birth", c:"general", d:"From HM Project documentation (verified). date of birth.", v:true },
+  { a:"DoD", f:"date of death", c:"general", d:"From HM Project documentation (verified). date of death.", v:true },
+  { a:"DoD", f:"Definition of Done", c:"general", d:"From HM Project documentation (verified). Definition of Done.", v:true },
+  { a:"DoD", f:"Department of Defense", c:"agency", d:"From HM Project documentation (verified). Department of Defense.", v:true },
+  { a:"DOE", f:"date of entry", c:"agency", d:"From HM Project documentation (verified). date of entry.", v:true },
+  { a:"DOE", f:"Department of Education", c:"agency", d:"Hawai'i DOE — provides the A+ data extract integrated into HANA.", v:false },
+  { a:"DOE", f:"Department of Education (State of Hawai'i)", c:"agency", d:"From HM Project documentation (verified). Department of Education (State of Hawai'i).", v:true },
+  { a:"DOH", f:"Department of Health (State of Hawai'i)", c:"agency", d:"From HM Project documentation (verified). Department of Health (State of Hawai'i).", v:true },
+  { a:"DOH", f:"Hawai'i Department of Health", c:"agency", d:"Sister state agency. Administers WIC and BHH (behavioral health).", v:false },
+  { a:"DOJ", f:"Department of Justice", c:"agency", d:"From HM Project documentation (verified). Department of Justice.", v:true },
+  { a:"DOM", f:"date of marriage", c:"general", d:"From HM Project documentation (verified). date of marriage.", v:true },
+  { a:"DOR", f:"Arizona Department of Revenue", c:"agency", d:"From HM Project documentation (verified). Arizona Department of Revenue.", v:true },
+  { a:"DoR", f:"Definition of Ready", c:"general", d:"From HM Project documentation (verified). Definition of Ready.", v:true },
+  { a:"DOTAX", f:"Department of Taxation", c:"agency", d:"From HM Project documentation (verified). Department of Taxation.", v:true },
+  { a:"DPO", f:"Diplomatic Post Office", c:"general", d:"From HM Project documentation (verified). Diplomatic Post Office.", v:true },
+  { a:"DPP", f:"Designated Provider Payment", c:"general", d:"From HM Project documentation (verified). Designated Provider Payment.", v:true },
+  { a:"DPS", f:"Department of Public Safety", c:"agency", d:"From HM Project documentation (verified). Department of Public Safety.", v:true },
+  { a:"DQ", f:"disqualified", c:"general", d:"From HM Project documentation (verified). disqualified.", v:true },
+  { a:"DR", f:"Disaster Recovery", c:"security", d:"Plan for recovering systems after a major outage. PP GCC has Microsoft-managed DR.", v:true },
+  { a:"DR drill", f:"Disaster Recovery Drill", c:"devops", d:"Practiced exercise of restoring service from backup. Annual cadence in HM.", v:false },
+  { a:"DRA", f:"The Deficit Reduction Act of 2005", c:"compliance", d:"From HM Project documentation (verified). The Deficit Reduction Act of 2005.", v:true },
+  { a:"DSED", f:"disaster standard expense deduction", c:"compliance", d:"From HM Project documentation (verified). disaster standard expense deduction.", v:true },
+  { a:"DSO", f:"Debt Setoff Program Office", c:"program", d:"From HM Project documentation (verified). Debt Setoff Program Office.", v:true },
+  { a:"DV", f:"Domestic Violence", c:"people", d:"WEI/OWEI subcategory for individuals affected by domestic violence.", v:true },
+  { a:"DV", f:"The 2-letter code in HANA designating domestic violence", c:"people", d:"From HM Project documentation (verified). The 2-letter code in HANA designating domestic violence.", v:true },
+  { a:"DVM", f:"domain value maps", c:"general", d:"From HM Project documentation (verified). domain value maps.", v:true },
+  { a:"DVR", f:"data validation and reconciliation", c:"general", d:"From HM Project documentation (verified). data validation and reconciliation.", v:true },
+  { a:"DVR", f:"Department of Vocational Rehabilitation", c:"agency", d:"From HM Project documentation (verified). Department of Vocational Rehabilitation.", v:true },
+  { a:"DW", f:"data warehouse", c:"data", d:"From HM Project documentation (verified). data warehouse.", v:true },
+  { a:"E&E", f:"eligibility and enrollment", c:"general", d:"From HM Project documentation (verified). eligibility and enrollment.", v:true },
+  { a:"E&T", f:"(SNAP) Employment and Training program", c:"program", d:"From HM Project documentation (verified). (SNAP) Employment and Training program.", v:true },
+  { a:"E&T", f:"education and training", c:"program", d:"From HM Project documentation (verified). education and training.", v:true },
+  { a:"E&T", f:"Employment and Training", c:"program", d:"BESSD work-readiness program (separate from FTW). Includes SNAP E&T.", v:false },
+  { a:"E&T", f:"engineering and technology", c:"program", d:"From HM Project documentation (verified). engineering and technology.", v:true },
+  { a:"e.g.", f:"Exempli gratia (for example)", c:"general", d:"From HM Project documentation (verified). Exempli gratia (for example).", v:true },
+  { a:"E2E", f:"End-to-End", c:"devops", d:"Testing across an entire user journey, not isolated components.", v:false },
+  { a:"EAI", f:"enterprise application integration", c:"general", d:"From HM Project documentation (verified). enterprise application integration.", v:true },
+  { a:"EB", f:"eligibility branch", c:"agency", d:"From HM Project documentation (verified). eligibility branch.", v:true },
+  { a:"EB", f:"exempt baby", c:"general", d:"From HM Project documentation (verified). exempt baby.", v:true },
+  { a:"EBC", f:"external business component", c:"general", d:"From HM Project documentation (verified). external business component.", v:true },
+  { a:"EBT", f:"Electronic Benefit Transfer", c:"program", d:"Card-based system used to deliver SNAP and cash benefits.", v:true },
+  { a:"EC", f:"energy credit", c:"general", d:"From HM Project documentation (verified). energy credit.", v:true },
+  { a:"ECE", f:"Early Care and Education", c:"general", d:"From HM Project documentation (verified). Early Care and Education.", v:true },
+  { a:"ECF", f:"electronic case folder", c:"general", d:"From HM Project documentation (verified). electronic case folder.", v:true },
+  { a:"ECI", f:"energy crisis intervention", c:"general", d:"From HM Project documentation (verified). energy crisis intervention.", v:true },
+  { a:"ECM", f:"enterprise content management", c:"general", d:"From HM Project documentation (verified). enterprise content management.", v:true },
+  { a:"ECP", f:"Extended Care Professional", c:"general", d:"From HM Project documentation (verified). Extended Care Professional.", v:true },
+  { a:"EDBC", f:"eligibility determination benefit calculation", c:"general", d:"From HM Project documentation (verified). eligibility determination benefit calculation.", v:true },
+  { a:"EDC", f:"expected date of confinement", c:"general", d:"From HM Project documentation (verified). expected date of confinement.", v:true },
+  { a:"EDM", f:"electronic document management", c:"tech", d:"From HM Project documentation (verified). electronic document management.", v:true },
+  { a:"EDM", f:"Enterprise Data Management", c:"tech", d:"Internal integration layer; HANA exchanges with EDM for cross-program data.", v:false },
+  { a:"EDM", f:"eWorldES deliverable mapping", c:"tech", d:"From HM Project documentation (verified). eWorldES deliverable mapping.", v:true },
+  { a:"EDQ", f:"enterprise data quality", c:"general", d:"From HM Project documentation (verified). enterprise data quality.", v:true },
+  { a:"EDR", f:"endpoint detection and response", c:"security", d:"From HM Project documentation (verified). endpoint detection and response.", v:true },
+  { a:"EDRS", f:"Electronic Disqualified Recipient System", c:"general", d:"From HM Project documentation (verified). Electronic Disqualified Recipient System.", v:true },
+  { a:"EEA", f:"Education & Employability Assessment (FTW)", c:"general", d:"From HM Project documentation (verified). Education & Employability Assessment (FTW).", v:true },
+  { a:"EERB", f:"Exit and Employment Retention Bonus (no longer in use)", c:"program", d:"From HM Project documentation (verified). Exit and Employment Retention Bonus (no longer in use).", v:true },
+  { a:"EERP", f:"Exit and Employment Retention Payment (formerly EERB)", c:"program", d:"From HM Project documentation (verified). Exit and Employment Retention Payment (formerly EERB).", v:true },
+  { a:"EHCY", f:"Education for Homeless Children and Youth program", c:"program", d:"From HM Project documentation (verified). Education for Homeless Children and Youth program.", v:true },
+  { a:"EIDR", f:"Earned Income Disregard", c:"general", d:"From HM Project documentation (verified). Earned Income Disregard.", v:true },
+  { a:"EIM", f:"enterprise integration manager", c:"people", d:"From HM Project documentation (verified). enterprise integration manager.", v:true },
+  { a:"ELB", f:"Early Learning Board", c:"general", d:"From HM Project documentation (verified). Early Learning Board.", v:true },
+  { a:"EM", f:"executive memorandum", c:"doc", d:"From HM Project documentation (verified). executive memorandum.", v:true },
+  { a:"EOC", f:"emergency operations center", c:"general", d:"From HM Project documentation (verified). emergency operations center.", v:true },
+  { a:"EOEL", f:"Hawai'i Executive Office on Early Learning", c:"general", d:"From HM Project documentation (verified). Hawai'i Executive Office on Early Learning.", v:true },
+  { a:"EOP", f:"Emergency Operations Plan", c:"doc", d:"From HM Project documentation (verified). Emergency Operations Plan.", v:true },
+  { a:"EPC", f:"Education Program Component (see HINET)", c:"general", d:"From HM Project documentation (verified). Education Program Component (see HINET).", v:true },
+  { a:"EPHI", f:"electronic-protected health information", c:"general", d:"From HM Project documentation (verified). electronic-protected health information.", v:true },
+  { a:"EPLS", f:"Excluded Parties List System", c:"general", d:"From HM Project documentation (verified). Excluded Parties List System.", v:true },
+  { a:"EPSDT", f:"Early & Periodic Screening, Diagnostic and Treatment program", c:"general", d:"From HM Project documentation (verified). Early & Periodic Screening, Diagnostic and Treatment program.", v:true },
+  { a:"ER", f:"eligibility review", c:"doc", d:"From HM Project documentation (verified). eligibility review.", v:true },
+  { a:"ER", f:"entity relationship", c:"general", d:"From HM Project documentation (verified). entity relationship.", v:true },
+  { a:"ERD", f:"Entity Relationship Diagram", c:"doc", d:"Visual model of entities and their relationships. UAM has a published ERD.", v:true },
+  { a:"ESAPI", f:"The OWASP Enterprise Security API", c:"general", d:"From HM Project documentation (verified). The OWASP Enterprise Security API.", v:true },
+  { a:"ESB", f:"enterprise service bus", c:"general", d:"From HM Project documentation (verified). enterprise service bus.", v:true },
+  { a:"ESC", f:"Executive Steering Committee", c:"agency", d:"From HM Project documentation (verified). Executive Steering Committee.", v:true },
+  { a:"ESF", f:"emergency support function", c:"general", d:"From HM Project documentation (verified). emergency support function.", v:true },
+  { a:"ESI", f:"enterprise systems integrator", c:"general", d:"From HM Project documentation (verified). enterprise systems integrator.", v:true },
+  { a:"ESI-MEC", f:"employer-sponsored insurance minimal essential coverage", c:"general", d:"From HM Project documentation (verified). employer-sponsored insurance minimal essential coverage.", v:true },
+  { a:"ESS", f:"enrollment support services", c:"general", d:"From HM Project documentation (verified). enrollment support services.", v:true },
+  { a:"etc.", f:"Et cetera (and so on)", c:"general", d:"From HM Project documentation (verified). Et cetera (and so on).", v:true },
+  { a:"ETL", f:"extract, transform, and load", c:"data", d:"From HM Project documentation (verified). extract, transform, and load.", v:true },
+  { a:"ETL", f:"Extract, Transform, Load", c:"data", d:"Data-migration pattern. ADF pipelines implement ETL from Oracle to Dataverse.", v:false },
+  { a:"ETS", f:"Enterprise Technology Services", c:"agency", d:"State of Hawai'i central IT services agency (publisher of IV&V reports).", v:true },
+  { a:"ETS-Cardinal", f:"Cardinal print/mail integration", c:"tech", d:"Outbound notice and letter printing/mailing. Triggered via Power Automate + Apigee + Boomi.", v:false },
+  { a:"EVM", f:"earned value management", c:"general", d:"From HM Project documentation (verified). earned value management.", v:true },
+  { a:"EW", f:"eligibility worker", c:"people", d:"From HM Project documentation (verified). eligibility worker.", v:true },
+  { a:"EWAL", f:"eligibility worker alert", c:"people", d:"From HM Project documentation (verified). eligibility worker alert.", v:true },
+  { a:"eWorldES", f:"eWorld Enterprise Solutions, Inc.", c:"general", d:"From HM Project documentation (verified). eWorld Enterprise Solutions, Inc..", v:true },
+  { a:"EX", f:"extension", c:"general", d:"From HM Project documentation (verified). extension.", v:true },
+  { a:"EYGA", f:"Ernest & Young Government Accelerator", c:"general", d:"From HM Project documentation (verified). Ernest & Young Government Accelerator.", v:true },
+  { a:"FAMIS", f:"Family Access to Medical Insurance Security", c:"tech", d:"From HM Project documentation (verified). Family Access to Medical Insurance Security.", v:true },
+  { a:"FAMIS", f:"Financial Accounting Management Information System", c:"tech", d:"State accounting system. Inbound weekly files to HANA.", v:false },
+  { a:"FAMIS", f:"Fiscal Accounting and Management Information System", c:"tech", d:"From HM Project documentation (verified). Fiscal Accounting and Management Information System.", v:true },
+  { a:"FAP", f:"Financial Assistance programs", c:"program", d:"From HM Project documentation (verified). Financial Assistance programs.", v:true },
+  { a:"FAPO", f:"Financial Assistance Program Office", c:"program", d:"From HM Project documentation (verified). Financial Assistance Program Office.", v:true },
+  { a:"FAQ", f:"Frequently Asked Questions", c:"general", d:"Curated common-questions list.", v:false },
+  { a:"FAT", f:"final acceptance test", c:"devops", d:"From HM Project documentation (verified). final acceptance test.", v:true },
+  { a:"FC", f:"foster care", c:"general", d:"From HM Project documentation (verified). foster care.", v:true },
+  { a:"FCC", f:"Family Child Care", c:"general", d:"From HM Project documentation (verified). Family Child Care.", v:true },
+  { a:"FD", f:"functional design", c:"general", d:"From HM Project documentation (verified). functional design.", v:true },
+  { a:"FDSH", f:"Federal Data Services Hub", c:"general", d:"From HM Project documentation (verified). Federal Data Services Hub.", v:true },
+  { a:"FedRAMP", f:"Federal Risk and Authorization Management Program", c:"compliance", d:"US government cloud-security authorization. HM operates under FedRAMP High package F1603087869.", v:true },
+  { a:"FEMA", f:"Federal Emergency Management Agency", c:"agency", d:"From HM Project documentation (verified). Federal Emergency Management Agency.", v:true },
+  { a:"FFC", f:"former foster care", c:"general", d:"From HM Project documentation (verified). former foster care.", v:true },
+  { a:"FFM", f:"federally facilitated marketplace", c:"general", d:"From HM Project documentation (verified). federally facilitated marketplace.", v:true },
+  { a:"FFY", f:"federal fiscal year", c:"general", d:"From HM Project documentation (verified). federal fiscal year.", v:true },
+  { a:"FHAG", f:"Federal Fair Housing Amendments Act Accessibility Guidelines", c:"compliance", d:"From HM Project documentation (verified). Federal Fair Housing Amendments Act Accessibility Guidelines.", v:true },
+  { a:"FI", f:"financial institution", c:"general", d:"From HM Project documentation (verified). financial institution.", v:true },
+  { a:"FICA", f:"Federal Insurance Contribution Act", c:"compliance", d:"From HM Project documentation (verified). Federal Insurance Contribution Act.", v:true },
+  { a:"FILS", f:"financial ineligibility lump sum", c:"general", d:"From HM Project documentation (verified). financial ineligibility lump sum.", v:true },
+  { a:"FIPS", f:"federal information processing standard", c:"compliance", d:"From HM Project documentation (verified). federal information processing standard.", v:true },
+  { a:"FIS", f:"Fidelity Information Services", c:"tech", d:"From HM Project documentation (verified). Fidelity Information Services.", v:true },
+  { a:"FIS", f:"Financial Information System", c:"tech", d:"State financial system. Inbound daily batch files to HANA.", v:false },
+  { a:"FISMA", f:"Federal Information Security Management Act", c:"compliance", d:"Foundational US law underpinning FedRAMP and federal security standards.", v:false },
+  { a:"FISMA", f:"Federal Information Security Modernization Act", c:"compliance", d:"From HM Project documentation (verified). Federal Information Security Modernization Act.", v:true },
+  { a:"FK", f:"Foreign Key", c:"data", d:"Column referring to another table's primary key — enforces relational integrity.", v:false },
+  { a:"FLSA", f:"Fair Labor Standards Act", c:"compliance", d:"From HM Project documentation (verified). Fair Labor Standards Act.", v:true },
+  { a:"FluentPro", f:"FluentPro (SaaS backup)", c:"cloud", d:"Third-party SaaS that backs up Dataverse data and Power Platform solutions.", v:false },
+  { a:"FMAP", f:"federal medical assistance percentages", c:"program", d:"From HM Project documentation (verified). federal medical assistance percentages.", v:true },
+  { a:"FMM", f:"Financial Management Module", c:"general", d:"From HM Project documentation (verified). Financial Management Module.", v:true },
+  { a:"FMO", f:"Fiscal Management Office (DHS)", c:"agency", d:"From HM Project documentation (verified). Fiscal Management Office (DHS).", v:true },
+  { a:"FMO/CRS", f:"FMO/Collections and Recovery Service", c:"general", d:"From HM Project documentation (verified). FMO/Collections and Recovery Service.", v:true },
+  { a:"FNS", f:"Food and Nutrition Service", c:"agency", d:"USDA division that administers SNAP at the federal level.", v:false },
+  { a:"FNS", f:"USDA Food and Nutrition Service", c:"agency", d:"From HM Project documentation (verified). USDA Food and Nutrition Service.", v:true },
+  { a:"FP", f:"Finger Print", c:"general", d:"From HM Project documentation (verified). Finger Print.", v:true },
+  { a:"FPG", f:"Federal Poverty Guidelines", c:"general", d:"From HM Project documentation (verified). Federal Poverty Guidelines.", v:true },
+  { a:"FPL", f:"federal poverty levels", c:"general", d:"From HM Project documentation (verified). federal poverty levels.", v:true },
+  { a:"FPO", f:"fleet post office", c:"general", d:"From HM Project documentation (verified). fleet post office.", v:true },
+  { a:"FRA", f:"full-retirement age", c:"general", d:"From HM Project documentation (verified). full-retirement age.", v:true },
+  { a:"FSFO", f:"fast-start failover", c:"general", d:"From HM Project documentation (verified). fast-start failover.", v:true },
+  { a:"FTI", f:"federal tax information", c:"general", d:"From HM Project documentation (verified). federal tax information.", v:true },
+  { a:"FTP", f:"file transfer protocol", c:"general", d:"From HM Project documentation (verified). file transfer protocol.", v:true },
+  { a:"FTW", f:"First-To-Work", c:"program", d:"Hawai'i's TANF employment program. Implemented FY 1997. Tracks work activities, sanctions, plans.", v:false },
+  { a:"FTW", f:"First-To-Work program", c:"program", d:"From HM Project documentation (verified). First-To-Work program.", v:true },
+  { a:"FW", f:"The 2-letter code in HANA designating FTW", c:"doc", d:"From HM Project documentation (verified). The 2-letter code in HANA designating FTW.", v:true },
+  { a:"FY", f:"fiscal year", c:"general", d:"From HM Project documentation (verified). fiscal year.", v:true },
+  { a:"GA", f:"General Assistance", c:"program", d:"State cash assistance for individuals not eligible for federal programs (e.g., able-bodied adults).", v:true },
+  { a:"GASB", f:"Governmental Accounting Standards Board", c:"general", d:"From HM Project documentation (verified). Governmental Accounting Standards Board.", v:true },
+  { a:"GB", f:"gigabyte", c:"general", d:"From HM Project documentation (verified). gigabyte.", v:true },
+  { a:"GBA", f:"Good Beginnings Alliance", c:"general", d:"From HM Project documentation (verified). Good Beginnings Alliance.", v:true },
+  { a:"GCC", f:"Government Community Cloud", c:"cloud", d:"Microsoft's cloud tier for US state/local government. HANA Mod runs on PP GCC.", v:false },
+  { a:"GCC", f:"Group Child Care", c:"cloud", d:"From HM Project documentation (verified). Group Child Care.", v:true },
+  { a:"GCC", f:"Power Automate - Government Community Cloud", c:"cloud", d:"From HM Project documentation (verified). Power Automate - Government Community Cloud.", v:true },
+  { a:"GCC High", f:"Power Automate - Government Community Cloud - High", c:"cloud", d:"From HM Project documentation (verified). Power Automate - Government Community Cloud - High.", v:true },
+  { a:"GCCM", f:"Group Child Care - Military", c:"general", d:"From HM Project documentation (verified). Group Child Care - Military.", v:true },
+  { a:"GCCMA", f:"Group Child Care - Military Accredited", c:"general", d:"From HM Project documentation (verified). Group Child Care - Military Accredited.", v:true },
+  { a:"GCH", f:"Group Child Care Home", c:"general", d:"From HM Project documentation (verified). Group Child Care Home.", v:true },
+  { a:"GCP", f:"Google Cloud Platform", c:"cloud", d:"From HM Project documentation (verified). Google Cloud Platform.", v:true },
+  { a:"GCS", f:"Google Cloud Storage", c:"cloud", d:"From HM Project documentation (verified). Google Cloud Storage.", v:true },
+  { a:"GDPR", f:"General Data Protection Regulation", c:"compliance", d:"From HM Project documentation (verified). General Data Protection Regulation.", v:true },
+  { a:"GED", f:"General Education Development", c:"general", d:"From HM Project documentation (verified). General Education Development.", v:true },
+  { a:"GET", f:"General Excise Tax", c:"general", d:"From HM Project documentation (verified). General Excise Tax.", v:true },
+  { a:"GETS", f:"Government Emergency Telephone System", c:"general", d:"From HM Project documentation (verified). Government Emergency Telephone System.", v:true },
+  { a:"GFS", f:"Microsoft Global Foundation Services", c:"cloud", d:"From HM Project documentation (verified). Microsoft Global Foundation Services.", v:true },
+  { a:"GI", f:"Gross Income", c:"general", d:"From HM Project documentation (verified). Gross Income.", v:true },
+  { a:"GIH", f:"Goodwill Industries of Hawaii", c:"general", d:"From HM Project documentation (verified). Goodwill Industries of Hawaii.", v:true },
+  { a:"GKE", f:"Google Kubernetes Engine", c:"cloud", d:"From HM Project documentation (verified). Google Kubernetes Engine.", v:true },
+  { a:"GL", f:"general ledger", c:"net", d:"From HM Project documentation (verified). general ledger.", v:true },
+  { a:"GLA", f:"group-living arrangement", c:"general", d:"From HM Project documentation (verified). group-living arrangement.", v:true },
+  { a:"GPE", f:"Grant Plus Employment", c:"program", d:"From HM Project documentation (verified). Grant Plus Employment.", v:true },
+  { a:"GSS", f:"general support system", c:"general", d:"From HM Project documentation (verified). general support system.", v:true },
+  { a:"GUID", f:"Globally Unique Identifier", c:"data", d:"128-bit unique ID format. Dataverse primary keys are GUIDs.", v:true },
+  { a:"H-HEAP", f:"Hawai'i Home Energy Assistance Program", c:"program", d:"State-specific implementation of LIHEAP.", v:false },
+  { a:"H-HEAP", f:"Hawai'i Home Energy Assistance Program (fka LIHEAP)", c:"program", d:"From HM Project documentation (verified). Hawai'i Home Energy Assistance Program (fka LIHEAP).", v:true },
+  { a:"HAA", f:"Hawai'i Afterschool Alliance", c:"general", d:"From HM Project documentation (verified). Hawai'i Afterschool Alliance.", v:true },
+  { a:"HAEYC", f:"Hawai'i Association for the Education of Young Children", c:"general", d:"From HM Project documentation (verified). Hawai'i Association for the Education of Young Children.", v:true },
+  { a:"HANA", f:"Hawai'i Automated Network for Assistance", c:"program", d:"From HM Project documentation (verified). Hawai'i Automated Network for Assistance.", v:true },
+  { a:"HANA", f:"Hawai'i Automated Network for Assistance", c:"program", d:"From HM Project documentation (verified). Hawai'i Automated Network for Assistance.", v:true },
+  { a:"HANA", f:"Hawaii Automated Network for Assistance", c:"program", d:"The case-management and eligibility platform operated by Hawai'i DHS BESSD. The subject of the modernization.", v:false },
+  { a:"HAPA", f:"Hawai'i Assessment and Personal Appraisal", c:"general", d:"From HM Project documentation (verified). Hawai'i Assessment and Personal Appraisal.", v:true },
+  { a:"HAPR", f:"HANA Provider ID", c:"general", d:"From HM Project documentation (verified). HANA Provider ID.", v:true },
+  { a:"HAR", f:"Hawai'i Administrative Rules", c:"general", d:"From HM Project documentation (verified). Hawai'i Administrative Rules.", v:true },
+  { a:"HARI", f:"Hawai'i Accounting Reporting Information", c:"tech", d:"State accounting/reporting feed integrated daily with HANA.", v:false },
+  { a:"HARI", f:"Hawai'i Accounts Receivable Information System", c:"tech", d:"From HM Project documentation (verified). Hawai'i Accounts Receivable Information System.", v:true },
+  { a:"HAWI", f:"Hawai'i (BES name)", c:"tech", d:"Eligibility decisioning system that integrates bidirectionally with HANA.", v:false },
+  { a:"HAWI", f:"Hawai'i Automated Welfare Information System", c:"tech", d:"From HM Project documentation (verified). Hawai'i Automated Welfare Information System.", v:true },
+  { a:"HCAN", f:"Hawai'i Children's Action Network", c:"net", d:"From HM Project documentation (verified). Hawai'i Children's Action Network.", v:true },
+  { a:"HCAP", f:"Honolulu Community Action Program", c:"general", d:"From HM Project documentation (verified). Honolulu Community Action Program.", v:true },
+  { a:"HCCNP", f:"Hawai'i Child Care Nutrition Program", c:"program", d:"From HM Project documentation (verified). Hawai'i Child Care Nutrition Program.", v:true },
+  { a:"HCJDC", f:"Hawai'i Criminal Justice Data Center", c:"general", d:"From HM Project documentation (verified). Hawai'i Criminal Justice Data Center.", v:true },
+  { a:"HCRC", f:"Hawai'i Civil Rights Commission", c:"general", d:"From HM Project documentation (verified). Hawai'i Civil Rights Commission.", v:true },
+  { a:"HCSB", f:"Health Care Services Branch", c:"agency", d:"From HM Project documentation (verified). Health Care Services Branch.", v:true },
+  { a:"HEAP", f:"Home Energy Assistance Program", c:"program", d:"Federal grant helping low-income households with energy costs.", v:false },
+  { a:"HELDS", f:"Hawai'i Early Learning and Development Standards", c:"general", d:"From HM Project documentation (verified). Hawai'i Early Learning and Development Standards.", v:true },
+  { a:"HELP", f:"Hawai'i Early Learning Platform", c:"general", d:"From HM Project documentation (verified). Hawai'i Early Learning Platform.", v:true },
+  { a:"HH", f:"household", c:"general", d:"From HM Project documentation (verified). household.", v:true },
+  { a:"HHS", f:"Health and Human Services", c:"agency", d:"From HM Project documentation (verified). Health and Human Services.", v:true },
+  { a:"HHS", f:"US Health and Human Services", c:"agency", d:"Federal parent of ACF/CMS. Not to be confused with state DHS.", v:false },
+  { a:"HI", f:"hospital insurance", c:"general", d:"From HM Project documentation (verified). hospital insurance.", v:true },
+  { a:"HIAEYC", f:"Hawaii Association for the Education of Young Children", c:"general", d:"From HM Project documentation (verified). Hawaii Association for the Education of Young Children.", v:true },
+  { a:"HIDHS", f:"Hawai'i DHS (Power Platform solution)", c:"program", d:"Name of one of the 4 Power Platform solutions deployed by the modernization (DHS Core, Gov Accelerator, HANA Solution, Custom Connector).", v:false },
+  { a:"HIPAA", f:"Health Insurance Portability and Accountability Act", c:"compliance", d:"US health-data privacy law. Applies to Med-QUEST data flows.", v:true },
+  { a:"HIPAA TCS", f:"transaction and code sets", c:"agency", d:"From HM Project documentation (verified). transaction and code sets.", v:true },
+  { a:"HIRMS", f:"Hawai'i Random Moment Sample", c:"general", d:"From HM Project documentation (verified). Hawai'i Random Moment Sample.", v:true },
+  { a:"HJUP", f:"Hawai'i Joint Underwriting Plan", c:"doc", d:"From HM Project documentation (verified). Hawai'i Joint Underwriting Plan.", v:true },
+  { a:"HM", f:"HANA Modernization", c:"program", d:"Project shorthand. Confluence space key is HM.", v:true },
+  { a:"HM-ARCH", f:"HM Architecture (Jira)", c:"doc", d:"Jira label/epic for architecture work-stream stories.", v:false },
+  { a:"HM-DDI", f:"HM Deliverable Document Identifier", c:"doc", d:"Format like HM-DDI-02.09.03.04.19 — identifies each contract deliverable.", v:false },
+  { a:"HOATI", f:"home of all things ineligible", c:"general", d:"From HM Project documentation (verified). home of all things ineligible.", v:true },
+  { a:"HOD", f:"host on demand", c:"general", d:"From HM Project documentation (verified). host on demand.", v:true },
+  { a:"HoH", f:"Head of household", c:"people", d:"From HM Project documentation (verified). Head of household.", v:true },
+  { a:"HPHA", f:"Hawai'i Public Housing Authority", c:"general", d:"From HM Project documentation (verified). Hawai'i Public Housing Authority.", v:true },
+  { a:"HPMMIS", f:"Hawai'i Prepaid Medical Management Information System", c:"general", d:"From HM Project documentation (verified). Hawai'i Prepaid Medical Management Information System.", v:true },
+  { a:"HPO", f:"Homeless Programs Office", c:"program", d:"BESSD office overseeing shelter and supportive services for the homeless.", v:false },
+  { a:"HRS", f:"Hawai'i Revised Statutes", c:"general", d:"From HM Project documentation (verified). Hawai'i Revised Statutes.", v:true },
+  { a:"HSAG", f:"Health Services Advisory Group", c:"general", d:"From HM Project documentation (verified). Health Services Advisory Group.", v:true },
+  { a:"HSM", f:"Hardware Security Module", c:"security", d:"Physical device holding cryptographic keys. Key Vault Premium uses HSM-backed keys (FIPS 140-2 L2).", v:false },
+  { a:"HST", f:"Hawai'i Standard Time", c:"compliance", d:"From HM Project documentation (verified). Hawai'i Standard Time.", v:true },
+  { a:"HTML", f:"HyperText Markup Language", c:"ui", d:"Markup language for web pages.", v:true },
+  { a:"HTTP", f:"HyperText Transfer Protocol", c:"net", d:"Foundational web protocol.", v:true },
+  { a:"HTTPS", f:"HTTP Secure", c:"net", d:"HTTP over TLS. All HM endpoints use HTTPS.", v:false },
+  { a:"HTTPS", f:"hypertext transfer protocol secure", c:"net", d:"From HM Project documentation (verified). hypertext transfer protocol secure.", v:true },
+  { a:"HUD", f:"Housing and Urban Development", c:"general", d:"From HM Project documentation (verified). Housing and Urban Development.", v:true },
+  { a:"HUGS", f:"Help Understanding Group Support", c:"general", d:"From HM Project documentation (verified). Help Understanding Group Support.", v:true },
+  { a:"HY", f:"hyperdescriptor", c:"general", d:"From HM Project documentation (verified). hyperdescriptor.", v:true },
+  { a:"HYCF", f:"Hawai'i Youth Correctional Facility", c:"general", d:"From HM Project documentation (verified). Hawai'i Youth Correctional Facility.", v:true },
+  { a:"I-HUB", f:"Interface Consumption Management Hub", c:"general", d:"From HM Project documentation (verified). Interface Consumption Management Hub.", v:true },
+  { a:"I-HUB", f:"interface hub", c:"general", d:"From HM Project documentation (verified). interface hub.", v:true },
+  { a:"i.e.", f:"Id est (that is)", c:"general", d:"From HM Project documentation (verified). Id est (that is).", v:true },
+  { a:"IA", f:"identification & authentication", c:"compliance", d:"From HM Project documentation (verified). identification & authentication.", v:true },
+  { a:"IA", f:"Identification and Authentication (NIST family)", c:"compliance", d:"NIST 800-53 family — IA-2 covers user identification, IA-4 covers identifier management.", v:false },
+  { a:"IaaS", f:"Infrastructure as a Service", c:"cloud", d:"Cloud service model — vendor provides VMs/storage; you manage everything else.", v:true },
+  { a:"IaC", f:"Infrastructure as Code", c:"devops", d:"Define infrastructure in code (Terraform, Bicep). HM uses Terraform for Azure PaaS.", v:false },
+  { a:"IAM", f:"identity and access management", c:"general", d:"From HM Project documentation (verified). identity and access management.", v:true },
+  { a:"IBM", f:"International Business Machine", c:"general", d:"From HM Project documentation (verified). International Business Machine.", v:true },
+  { a:"IBR", f:"initial business review", c:"doc", d:"From HM Project documentation (verified). initial business review.", v:true },
+  { a:"IC", f:"integration component", c:"general", d:"From HM Project documentation (verified). integration component.", v:true },
+  { a:"ICD", f:"Interface Control Document", c:"doc", d:"Specifies the contract between two systems (request/response, errors, SLAs).", v:true },
+  { a:"ICF", f:"Inner City Fund", c:"general", d:"From HM Project documentation (verified). Inner City Fund.", v:true },
+  { a:"ICF", f:"internal communications form", c:"doc", d:"From HM Project documentation (verified). internal communications form.", v:true },
+  { a:"ICM", f:"Inspire content manager", c:"people", d:"From HM Project documentation (verified). Inspire content manager.", v:true },
+  { a:"ICN", f:"IBM content navigator", c:"general", d:"From HM Project documentation (verified). IBM content navigator.", v:true },
+  { a:"ID", f:"Identification", c:"general", d:"From HM Project documentation (verified). Identification.", v:true },
+  { a:"IDA", f:"Individual Development Account", c:"people", d:"From HM Project documentation (verified). Individual Development Account.", v:true },
+  { a:"IDCS", f:"Oracle Identity Cloud Service", c:"cloud", d:"From HM Project documentation (verified). Oracle Identity Cloud Service.", v:true },
+  { a:"IDD", f:"interface design document", c:"doc", d:"From HM Project documentation (verified). interface design document.", v:true },
+  { a:"IDE", f:"Integrated Development Environment", c:"devops", d:"Code editor with build/debug tools (VS Code, Visual Studio, etc.).", v:true },
+  { a:"IDEA", f:"Individuals with Disabilities Education Act", c:"people", d:"From HM Project documentation (verified). Individuals with Disabilities Education Act.", v:true },
+  { a:"IDM", f:"identity management", c:"security", d:"From HM Project documentation (verified). identity management.", v:true },
+  { a:"IDP", f:"identity provider", c:"security", d:"From HM Project documentation (verified). identity provider.", v:true },
+  { a:"IDPS", f:"Intrusion Detection and Prevention System", c:"security", d:"Active threat detection — Azure Firewall Premium provides IDPS signatures.", v:false },
+  { a:"IDS", f:"intrusion detection system", c:"security", d:"From HM Project documentation (verified). intrusion detection system.", v:true },
+  { a:"IEEE", f:"Institute of Electrical and Electronics Engineers", c:"people", d:"From HM Project documentation (verified). Institute of Electrical and Electronics Engineers.", v:true },
+  { a:"IEVS", f:"Income Eligibility Verification System", c:"general", d:"From HM Project documentation (verified). Income Eligibility Verification System.", v:true },
+  { a:"IFB", f:"interface batch", c:"general", d:"From HM Project documentation (verified). interface batch.", v:true },
+  { a:"IHS", f:"Institute for Human Services", c:"general", d:"From HM Project documentation (verified). Institute for Human Services.", v:true },
+  { a:"IIHI", f:"individually identifiable health information", c:"people", d:"From HM Project documentation (verified). individually identifiable health information.", v:true },
+  { a:"IM", f:"Income Maintenance", c:"general", d:"From HM Project documentation (verified). Income Maintenance.", v:true },
+  { a:"IM", f:"Innovative Management", c:"general", d:"From HM Project documentation (verified). Innovative Management.", v:true },
+  { a:"IMW", f:"Income Maintenance Worker", c:"people", d:"DHS field worker who processes eligibility and case actions.", v:false },
+  { a:"INA", f:"Immigration and Nationality Act", c:"compliance", d:"From HM Project documentation (verified). Immigration and Nationality Act.", v:true },
+  { a:"INF", f:"Informatica", c:"general", d:"From HM Project documentation (verified). Informatica.", v:true },
+  { a:"INS", f:"Immigration and Naturalization Service", c:"general", d:"From HM Project documentation (verified). Immigration and Naturalization Service.", v:true },
+  { a:"INT", f:"Child Care: Intersession Care, Summer", c:"general", d:"From HM Project documentation (verified). Child Care: Intersession Care, Summer.", v:true },
+  { a:"INVO", f:"Investigations Office", c:"general", d:"From HM Project documentation (verified). Investigations Office.", v:true },
+  { a:"IO", f:"intake and orientation", c:"general", d:"From HM Project documentation (verified). intake and orientation.", v:true },
+  { a:"IO", f:"integration object", c:"general", d:"From HM Project documentation (verified). integration object.", v:true },
+  { a:"IOC", f:"inversion of control", c:"general", d:"From HM Project documentation (verified). inversion of control.", v:true },
+  { a:"IP", f:"innovation pack", c:"net", d:"From HM Project documentation (verified). innovation pack.", v:true },
+  { a:"IP", f:"Internet Protocol", c:"net", d:"Foundational networking protocol.", v:false },
+  { a:"IPC", f:"Informatica PowerCenter", c:"general", d:"From HM Project documentation (verified). Informatica PowerCenter.", v:true },
+  { a:"IPE", f:"individualized plan for employment", c:"program", d:"From HM Project documentation (verified). individualized plan for employment.", v:true },
+  { a:"IPMR", f:"Integrated Program Management Review", c:"doc", d:"From HM Project documentation (verified). Integrated Program Management Review.", v:true },
+  { a:"IPS", f:"intrusion prevention system", c:"security", d:"From HM Project documentation (verified). intrusion prevention system.", v:true },
+  { a:"IPV", f:"intentional program violation", c:"general", d:"From HM Project documentation (verified). intentional program violation.", v:true },
+  { a:"IPV", f:"intimate partner violence", c:"general", d:"From HM Project documentation (verified). intimate partner violence.", v:true },
+  { a:"IR", f:"incident response", c:"security", d:"From HM Project documentation (verified). incident response.", v:true },
+  { a:"IRC", f:"Internal Revenue Code", c:"agency", d:"From HM Project documentation (verified). Internal Revenue Code.", v:true },
+  { a:"IRS", f:"Internal Revenue Service", c:"agency", d:"US federal tax agency. HANA queries IRS for income verification.", v:true },
+  { a:"ISA", f:"interconnection security agreement", c:"doc", d:"From HM Project documentation (verified). interconnection security agreement.", v:true },
+  { a:"ISN", f:"internal sequence number", c:"general", d:"From HM Project documentation (verified). internal sequence number.", v:true },
+  { a:"ISO", f:"International Organization for Standardization", c:"general", d:"From HM Project documentation (verified). International Organization for Standardization.", v:true },
+  { a:"ISOC", f:"Information Security Operations Center", c:"security", d:"From HM Project documentation (verified). Information Security Operations Center.", v:true },
+  { a:"ISSO", f:"information system security officer", c:"people", d:"From HM Project documentation (verified). information system security officer.", v:true },
+  { a:"ISV", f:"Independent Software Vendor", c:"general", d:"From HM Project documentation (verified). Independent Software Vendor.", v:true },
+  { a:"IT", f:"Infant and Toddler Care", c:"general", d:"From HM Project documentation (verified). Infant and Toddler Care.", v:true },
+  { a:"IT", f:"The 2-letter designation in HANA for Infant and Toddler Care", c:"doc", d:"From HM Project documentation (verified). The 2-letter designation in HANA for Infant and Toddler Care.", v:true },
+  { a:"ITAR", f:"International Traffic in Arms Regulations", c:"general", d:"From HM Project documentation (verified). International Traffic in Arms Regulations.", v:true },
+  { a:"ITIL", f:"Information Technology Infrastructure Library", c:"general", d:"From HM Project documentation (verified). Information Technology Infrastructure Library.", v:true },
+  { a:"ITO", f:"Indian Tribal Organization", c:"general", d:"From HM Project documentation (verified). Indian Tribal Organization.", v:true },
+  { a:"IV&V", f:"Independent Verification and Validation", c:"devops", d:"Third-party objective assessment of project deliverables. Procured separately by DHS.", v:true },
+  { a:"IVR", f:"integrated voice response", c:"tech", d:"From HM Project documentation (verified). integrated voice response.", v:true },
+  { a:"IVR", f:"Interactive Voice Response", c:"tech", d:"Phone-based self-service for clients. Integrated with HANA case status.", v:false },
+  { a:"J2EE", f:"Java 2 Platform Enterprise Edition", c:"general", d:"From HM Project documentation (verified). Java 2 Platform Enterprise Edition.", v:true },
+  { a:"JAAS", f:"Java Authentication and Authorization Service", c:"security", d:"From HM Project documentation (verified). Java Authentication and Authorization Service.", v:true },
+  { a:"JAD", f:"joint application design", c:"general", d:"From HM Project documentation (verified). joint application design.", v:true },
+  { a:"JAD", f:"joint application development", c:"general", d:"From HM Project documentation (verified). joint application development.", v:true },
+  { a:"JAR", f:"Java Archive", c:"general", d:"From HM Project documentation (verified). Java Archive.", v:true },
+  { a:"JAR", f:"joint application requirements", c:"general", d:"From HM Project documentation (verified). joint application requirements.", v:true },
+  { a:"JDBC", f:"Java Database Connectivity", c:"data", d:"From HM Project documentation (verified). Java Database Connectivity.", v:true },
+  { a:"JDK", f:"Java Development Kit", c:"general", d:"From HM Project documentation (verified). Java Development Kit.", v:true },
+  { a:"JIT", f:"Just-In-Time", c:"security", d:"Access granted only when needed, time-boxed, then auto-revoked. UAM's core pattern.", v:false },
+  { a:"JNDI", f:"Java Naming and Directory Interface", c:"people", d:"From HM Project documentation (verified). Java Naming and Directory Interface.", v:true },
+  { a:"JPA", f:"Java Persistence API", c:"general", d:"From HM Project documentation (verified). Java Persistence API.", v:true },
+  { a:"JRE", f:"Java Runtime Environment", c:"general", d:"From HM Project documentation (verified). Java Runtime Environment.", v:true },
+  { a:"JS", f:"JavaScript", c:"ui", d:"From HM Project documentation (verified). JavaScript.", v:true },
+  { a:"JSON", f:"JavaScript Object Notation", c:"data", d:"Lightweight data interchange format. Default for most APIs.", v:true },
+  { a:"JVM", f:"Java Virtual Machine", c:"cloud", d:"From HM Project documentation (verified). Java Virtual Machine.", v:true },
+  { a:"JWT", f:"JSON (JavaScript Object Notation) Web Token", c:"security", d:"From HM Project documentation (verified). JSON (JavaScript Object Notation) Web Token.", v:true },
+  { a:"JWT", f:"JSON Web Token", c:"security", d:"Compact signed token format. Used for Function App authorization, APIM JWT enforcement.", v:false },
+  { a:"KBAs", f:"Knowledge Base Articles", c:"net", d:"From HM Project documentation (verified). Knowledge Base Articles.", v:true },
+  { a:"KIES", f:"KOLEA Integrated Eligibility System", c:"general", d:"From HM Project documentation (verified). KOLEA Integrated Eligibility System.", v:true },
+  { a:"KOLEA", f:"Kauhale On-Line Eligibility Assistance", c:"program", d:"From HM Project documentation (verified). Kauhale On-Line Eligibility Assistance.", v:true },
+  { a:"KPI", f:"Key Performance Indicator", c:"general", d:"Numeric measure tracking goal progress.", v:true },
+  { a:"KV", f:"Key Vault", c:"cloud", d:"Azure secret/cert/key store. HSM-backed Premium for production.", v:false },
+  { a:"LA", f:"logical architecture", c:"people", d:"From HM Project documentation (verified). logical architecture.", v:true },
+  { a:"LAF", f:"ledger account file", c:"net", d:"From HM Project documentation (verified). ledger account file.", v:true },
+  { a:"LAN", f:"local area network", c:"net", d:"From HM Project documentation (verified). local area network.", v:true },
+  { a:"LASH", f:"Legal Aid Society of Hawai'i", c:"general", d:"From HM Project documentation (verified). Legal Aid Society of Hawai'i.", v:true },
+  { a:"LB", f:"load balancer", c:"net", d:"From HM Project documentation (verified). load balancer.", v:true },
+  { a:"LDAP", f:"Lightweight Directory Access Protocol", c:"people", d:"From HM Project documentation (verified). Lightweight Directory Access Protocol.", v:true },
+  { a:"LDS", f:"limited data set", c:"general", d:"From HM Project documentation (verified). limited data set.", v:true },
+  { a:"LEP", f:"limited English proficiency", c:"general", d:"From HM Project documentation (verified). limited English proficiency.", v:true },
+  { a:"LIHEAP", f:"Low Income Home Energy Assistance Program", c:"program", d:"Federal name for the energy-assistance program (Hawai'i delivers it as H-HEAP).", v:true },
+  { a:"LLC", f:"limited liability company", c:"general", d:"From HM Project documentation (verified). limited liability company.", v:true },
+  { a:"LMS", f:"learning management system", c:"general", d:"From HM Project documentation (verified). learning management system.", v:true },
+  { a:"LOC", f:"level of care", c:"general", d:"From HM Project documentation (verified). level of care.", v:true },
+  { a:"LOV", f:"List of Values", c:"doc", d:"Lookup/code-table values. HANA has 220 LOV tables migrated to Dataverse Global Option Sets.", v:true },
+  { a:"LPR", f:"lawful permanent residents", c:"general", d:"From HM Project documentation (verified). lawful permanent residents.", v:true },
+  { a:"LTC", f:"long-term care", c:"general", d:"From HM Project documentation (verified). long-term care.", v:true },
+  { a:"LTG", f:"Learning to Grow project", c:"general", d:"From HM Project documentation (verified). Learning to Grow project.", v:true },
+  { a:"M&O", f:"Maintenance and Operations", c:"doc", d:"Ongoing operations work after a system is in production.", v:true },
+  { a:"MA", f:"major application", c:"general", d:"From HM Project documentation (verified). major application.", v:true },
+  { a:"MAA", f:"monthly assistance allowance", c:"program", d:"From HM Project documentation (verified). monthly assistance allowance.", v:true },
+  { a:"MAC", f:"Montessori Associate Credential", c:"security", d:"From HM Project documentation (verified). Montessori Associate Credential.", v:true },
+  { a:"MAGI", f:"modified adjusted gross income", c:"general", d:"From HM Project documentation (verified). modified adjusted gross income.", v:true },
+  { a:"MARS-E", f:"Minimal Acceptable Risk Standards for Exchanges", c:"general", d:"From HM Project documentation (verified). Minimal Acceptable Risk Standards for Exchanges.", v:true },
+  { a:"MDA", f:"Model Driven Application (Power Platform)", c:"cloud", d:"From HM Project documentation (verified). Model Driven Application (Power Platform).", v:true },
+  { a:"MDA", f:"Model-Driven App", c:"cloud", d:"Power Platform app type — form/grid/dashboard-driven. The primary HANA UI.", v:false },
+  { a:"MDH", f:"Master Data Hub (Boomi)", c:"general", d:"From HM Project documentation (verified). Master Data Hub (Boomi).", v:true },
+  { a:"MDM", f:"Master Data Management", c:"general", d:"From HM Project documentation (verified). Master Data Management.", v:true },
+  { a:"MDS", f:"meta data services", c:"general", d:"From HM Project documentation (verified). meta data services.", v:true },
+  { a:"MEET", f:"Medicaid Eligibility and Enrollment Toolkit", c:"program", d:"From HM Project documentation (verified). Medicaid Eligibility and Enrollment Toolkit.", v:true },
+  { a:"MES", f:"Medicaid Enterprise Systems", c:"program", d:"From HM Project documentation (verified). Medicaid Enterprise Systems.", v:true },
+  { a:"MF", f:"mainframe", c:"general", d:"From HM Project documentation (verified). mainframe.", v:true },
+  { a:"MFA", f:"Multi-Factor Authentication", c:"security", d:"Second-factor auth (e.g., Authenticator app, SMS code). Required for HANA admin access.", v:false },
+  { a:"MFA", f:"multifactor authentication", c:"security", d:"From HM Project documentation (verified). multifactor authentication.", v:true },
+  { a:"MFD", f:"multifunction device", c:"general", d:"From HM Project documentation (verified). multifunction device.", v:true },
+  { a:"MFIS", f:"Medicare fraud information specialists", c:"people", d:"From HM Project documentation (verified). Medicare fraud information specialists.", v:true },
+  { a:"MFIS", f:"membership file integrity section", c:"net", d:"From HM Project documentation (verified). membership file integrity section.", v:true },
+  { a:"MIB", f:"management information base", c:"general", d:"From HM Project documentation (verified). management information base.", v:true },
+  { a:"MIECHV", f:"Maternal, Infant, and Early Childhood Home Visiting", c:"general", d:"From HM Project documentation (verified). Maternal, Infant, and Early Childhood Home Visiting.", v:true },
+  { a:"MITA", f:"Medicaid Information Technology Architecture", c:"program", d:"From HM Project documentation (verified). Medicaid Information Technology Architecture.", v:true },
+  { a:"MMK", f:"Microsoft-Managed Key", c:"security", d:"Encryption key managed by Microsoft — the default for most Azure resources.", v:false },
+  { a:"MOA", f:"Memorandum of Agreement", c:"doc", d:"More formal than MOU; sometimes legally binding.", v:true },
+  { a:"MOE", f:"Maintenance of Effort", c:"general", d:"From HM Project documentation (verified). Maintenance of Effort.", v:true },
+  { a:"months", f:"Jan., Feb., Mar., Apr., May, June, July, Aug., Sept., Nov., Dec.", c:"general", d:"From HM Project documentation (verified). Jan., Feb., Mar., Apr., May, June, July, Aug., Sept., Nov., Dec..", v:true },
+  { a:"MOP", f:"Method of payment", c:"general", d:"From HM Project documentation (verified). Method of payment.", v:true },
+  { a:"MOU", f:"Memorandum of Understanding", c:"doc", d:"Non-binding agreement between parties — often used for inter-agency data sharing.", v:true },
+  { a:"MP", f:"media protection", c:"general", d:"From HM Project documentation (verified). media protection.", v:true },
+  { a:"MPLS", f:"multi-protocol label switching", c:"net", d:"From HM Project documentation (verified). multi-protocol label switching.", v:true },
+  { a:"MQD", f:"Med-QUEST Division", c:"agency", d:"From HM Project documentation (verified). Med-QUEST Division.", v:true },
+  { a:"MRS", f:"Market Rate Survey", c:"general", d:"From HM Project documentation (verified). Market Rate Survey.", v:true },
+  { a:"MSO", f:"Management Services Office", c:"general", d:"From HM Project documentation (verified). Management Services Office.", v:true },
+  { a:"MSP", f:"Medicare Savings Programs", c:"general", d:"From HM Project documentation (verified). Medicare Savings Programs.", v:true },
+  { a:"MU", f:"multiple value", c:"general", d:"From HM Project documentation (verified). multiple value.", v:true },
+  { a:"MVF", f:"minimum viable functionality", c:"general", d:"From HM Project documentation (verified). minimum viable functionality.", v:true },
+  { a:"MVG", f:"multi-value group", c:"general", d:"From HM Project documentation (verified). multi-value group.", v:true },
+  { a:"MVL", f:"multivalue link", c:"general", d:"From HM Project documentation (verified). multivalue link.", v:true },
+  { a:"MVP", f:"Minimum Viable Product", c:"general", d:"Smallest release that delivers user value.", v:true },
+  { a:"N/A", f:"Not applicable", c:"general", d:"From HM Project documentation (verified). Not applicable.", v:true },
+  { a:"NA-TR", f:"Non-Assistance Transitional Support", c:"program", d:"From HM Project documentation (verified). Non-Assistance Transitional Support.", v:true },
+  { a:"NACCRA", f:"National Association of Child Care Resource and Referral Agencies", c:"general", d:"From HM Project documentation (verified). National Association of Child Care Resource and Referral Agencies.", v:true },
+  { a:"NAEYC", f:"National Association for the Education of Young Children", c:"general", d:"From HM Project documentation (verified). National Association for the Education of Young Children.", v:true },
+  { a:"NAFCC", f:"National Association for Family Child Care", c:"general", d:"From HM Project documentation (verified). National Association for Family Child Care.", v:true },
+  { a:"NALA", f:"Native American Languages Act of 1990", c:"compliance", d:"From HM Project documentation (verified). Native American Languages Act of 1990.", v:true },
+  { a:"NAM", f:"Notes and Activities Management (HANA Mod pod)", c:"program", d:"From HM Project documentation (verified). Notes and Activities Management (HANA Mod pod).", v:true },
+  { a:"NAM", f:"Notice and Alert Management", c:"program", d:"Modernization solution covering outbound notices and alerts (in TES In-Scope Systems list).", v:false },
+  { a:"NCOA", f:"National Change of Address", c:"general", d:"From HM Project documentation (verified). National Change of Address.", v:true },
+  { a:"NCP", f:"Non-Custodial Parent", c:"people", d:"From HM Project documentation (verified). Non-Custodial Parent.", v:true },
+  { a:"NDNH", f:"National Directory for New Hires", c:"people", d:"From HM Project documentation (verified). National Directory for New Hires.", v:true },
+  { a:"NECPA", f:"National Early Childhood Program Accreditation", c:"general", d:"From HM Project documentation (verified). National Early Childhood Program Accreditation.", v:true },
+  { a:"NFI", f:"no-fault insurance", c:"general", d:"From HM Project documentation (verified). no-fault insurance.", v:true },
+  { a:"NFR", f:"non-functional requirement", c:"general", d:"From HM Project documentation (verified). non-functional requirement.", v:true },
+  { a:"NIEER", f:"National Institute for Early Education Research", c:"general", d:"From HM Project documentation (verified). National Institute for Early Education Research.", v:true },
+  { a:"NIST", f:"National Institute of Standards and Technology", c:"compliance", d:"Publishes the SP 800-53 controls used by FedRAMP.", v:true },
+  { a:"NL", f:"non-lobby", c:"general", d:"From HM Project documentation (verified). non-lobby.", v:true },
+  { a:"NNSC", f:"SSA's National Network Service Center", c:"net", d:"From HM Project documentation (verified). SSA's National Network Service Center.", v:true },
+  { a:"no.", f:"Number", c:"general", d:"From HM Project documentation (verified). Number.", v:true },
+  { a:"NPA", f:"non-public assistance", c:"program", d:"From HM Project documentation (verified). non-public assistance.", v:true },
+  { a:"NPP", f:"Notice of Privacy Practices", c:"doc", d:"From HM Project documentation (verified). Notice of Privacy Practices.", v:true },
+  { a:"NRST", f:"Non-recurring short-term (TANF related payment)", c:"program", d:"From HM Project documentation (verified). Non-recurring short-term (TANF related payment).", v:true },
+  { a:"NSF", f:"non-sufficient funds", c:"general", d:"From HM Project documentation (verified). non-sufficient funds.", v:true },
+  { a:"NSG", f:"Network Security Group", c:"net", d:"Subnet/NIC-level firewall rules in Azure.", v:false },
+  { a:"NTP", f:"Network Time Protocol", c:"net", d:"From HM Project documentation (verified). Network Time Protocol.", v:true },
+  { a:"NWEI", f:"Non-Work Eligible Individual", c:"people", d:"TANF classification — not subject to work requirements (e.g., elderly, child, disabled).", v:true },
+  { a:"O&M", f:"Operations and Maintenance", c:"doc", d:"Alias for M&O. Used interchangeably.", v:false },
+  { a:"O/I", f:"Orientation and Intake (FTW)", c:"general", d:"From HM Project documentation (verified). Orientation and Intake (FTW).", v:true },
+  { a:"OA", f:"Office Assistant", c:"general", d:"From HM Project documentation (verified). Office Assistant.", v:true },
+  { a:"OAAM", f:"Oracle Adaptive Access Manager", c:"people", d:"From HM Project documentation (verified). Oracle Adaptive Access Manager.", v:true },
+  { a:"OAG", f:"Oracle API Gateway", c:"net", d:"From HM Project documentation (verified). Oracle API Gateway.", v:true },
+  { a:"OAM", f:"Oracle Access Management", c:"general", d:"From HM Project documentation (verified). Oracle Access Management.", v:true },
+  { a:"OASDI", f:"Old-Age, Survivors, and Disability Insurance", c:"general", d:"From HM Project documentation (verified). Old-Age, Survivors, and Disability Insurance.", v:true },
+  { a:"OASI", f:"Old-Age and Survivors Insurance", c:"general", d:"From HM Project documentation (verified). Old-Age and Survivors Insurance.", v:true },
+  { a:"OASIS", f:"Organization for the Advancement of Structured Information Standards", c:"general", d:"From HM Project documentation (verified). Organization for the Advancement of Structured Information Standards.", v:true },
+  { a:"OAuth", f:"Open Authorization", c:"security", d:"Authorization framework. Used for service-account flows, app-to-app, delegated access.", v:false },
+  { a:"OB", f:"Oahu Branch", c:"agency", d:"From HM Project documentation (verified). Oahu Branch.", v:true },
+  { a:"OBC", f:"outcomes-based certification", c:"general", d:"From HM Project documentation (verified). outcomes-based certification.", v:true },
+  { a:"OBIA", f:"Oracle Business Intelligence Application", c:"general", d:"From HM Project documentation (verified). Oracle Business Intelligence Application.", v:true },
+  { a:"OBIEE", f:"Oracle Business Intelligence Enterprise Edition", c:"general", d:"From HM Project documentation (verified). Oracle Business Intelligence Enterprise Edition.", v:true },
+  { a:"OBTS", f:"Offender Based Transaction System", c:"general", d:"From HM Project documentation (verified). Offender Based Transaction System.", v:true },
+  { a:"OCC", f:"(Federal) Office of Child Care", c:"agency", d:"From HM Project documentation (verified). (Federal) Office of Child Care.", v:true },
+  { a:"OCH", f:"Oracle Customer Hub", c:"general", d:"From HM Project documentation (verified). Oracle Customer Hub.", v:true },
+  { a:"OCI", f:"Oracle Cloud Infrastructure", c:"cloud", d:"From HM Project documentation (verified). Oracle Cloud Infrastructure.", v:true },
+  { a:"OCM", f:"organizational change management", c:"general", d:"From HM Project documentation (verified). organizational change management.", v:true },
+  { a:"OCMSC", f:"organizational change management stakeholder communications", c:"general", d:"From HM Project documentation (verified). organizational change management stakeholder communications.", v:true },
+  { a:"OCR", f:"Office for Civil Rights", c:"agency", d:"From HM Project documentation (verified). Office for Civil Rights.", v:true },
+  { a:"OCS", f:"Office of Community Service", c:"agency", d:"From HM Project documentation (verified). Office of Community Service.", v:true },
+  { a:"OCSE", f:"Office of Child Support Enforcement", c:"program", d:"From HM Project documentation (verified). Office of Child Support Enforcement.", v:true },
+  { a:"ODBC", f:"open database connectivity", c:"data", d:"From HM Project documentation (verified). open database connectivity.", v:true },
+  { a:"ODS", f:"operational data store", c:"general", d:"From HM Project documentation (verified). operational data store.", v:true },
+  { a:"OEG", f:"Oracle Enterprise Gateway", c:"net", d:"From HM Project documentation (verified). Oracle Enterprise Gateway.", v:true },
+  { a:"OEM", f:"Oracle Enterprise Manager", c:"people", d:"From HM Project documentation (verified). Oracle Enterprise Manager.", v:true },
+  { a:"OET", f:"Office of Enterprise Technology", c:"agency", d:"DHS IT security office. Owns production environment and approves DHS/OET security policies.", v:false },
+  { a:"OET", f:"The Office of Information Technology (OIT) was reorganized and renamed the Office of Enterprise Technology (OET) in January 2024", c:"agency", d:"From HM Project documentation (verified). The Office of Information Technology (OIT) was reorganized and renamed the Office of Enterprise Technology (OET) in January 2024.", v:true },
+  { a:"OFA", f:"Office of Family Assistance", c:"program", d:"From HM Project documentation (verified). Office of Family Assistance.", v:true },
+  { a:"OIA", f:"Oracle Intelligent Advisor", c:"general", d:"From HM Project documentation (verified). Oracle Intelligent Advisor.", v:true },
+  { a:"OID", f:"Oracle Internet Directory", c:"people", d:"From HM Project documentation (verified). Oracle Internet Directory.", v:true },
+  { a:"OIDC", f:"Open ID Connect", c:"security", d:"From HM Project documentation (verified). Open ID Connect.", v:true },
+  { a:"OIDC", f:"OpenID Connect", c:"security", d:"Identity layer on top of OAuth 2.0. Used by Power Pages B2C, ADFS federation.", v:false },
+  { a:"OIM", f:"Oracle Identity Management / Oracle Identity Manager", c:"people", d:"From HM Project documentation (verified). Oracle Identity Management / Oracle Identity Manager.", v:true },
+  { a:"OIMT", f:"Office of Information Management and Technology", c:"agency", d:"From HM Project documentation (verified). Office of Information Management and Technology.", v:true },
+  { a:"OIN", f:"Oracle Identity Navigator", c:"general", d:"From HM Project documentation (verified). Oracle Identity Navigator.", v:true },
+  { a:"OIS", f:"Oahu investigation staff", c:"general", d:"From HM Project documentation (verified). Oahu investigation staff.", v:true },
+  { a:"OKR", f:"Objectives and Key Results", c:"general", d:"Goal-setting framework — qualitative objective with measurable key results.", v:false },
+  { a:"OLAP", f:"Online Analytical Processing", c:"data", d:"Type of workload optimized for large analytical reads (Synapse, Power BI).", v:true },
+  { a:"OLTP", f:"Online Transaction Processing", c:"data", d:"Type of workload optimized for many small read/writes (e.g., Dataverse).", v:true },
+  { a:"OMB", f:"U.S. Office of Management and Budget", c:"agency", d:"From HM Project documentation (verified). U.S. Office of Management and Budget.", v:true },
+  { a:"ONG", f:"one gate", c:"general", d:"From HM Project documentation (verified). one gate.", v:true },
+  { a:"OOTB", f:"out-of-the-box", c:"general", d:"From HM Project documentation (verified). out-of-the-box.", v:true },
+  { a:"OPA", f:"Oracle Policy Automation", c:"compliance", d:"From HM Project documentation (verified). Oracle Policy Automation.", v:true },
+  { a:"OPM", f:"Oracle Policy Modelling", c:"compliance", d:"From HM Project documentation (verified). Oracle Policy Modelling.", v:true },
+  { a:"OS", f:"Operating System", c:"tech", d:"Foundational software layer (e.g., Windows Server, SLES).", v:true },
+  { a:"OS", f:"out-of-state TANF month", c:"tech", d:"From HM Project documentation (verified). out-of-state TANF month.", v:true },
+  { a:"OSB", f:"Oracle Service Bus", c:"general", d:"From HM Project documentation (verified). Oracle Service Bus.", v:true },
+  { a:"OSC", f:"Operations Steering Committee", c:"agency", d:"From HM Project documentation (verified). Operations Steering Committee.", v:true },
+  { a:"OUD", f:"Oracle Unified Directory", c:"people", d:"From HM Project documentation (verified). Oracle Unified Directory.", v:true },
+  { a:"OVCA", f:"over-payment claim authorization", c:"security", d:"From HM Project documentation (verified). over-payment claim authorization.", v:true },
+  { a:"OVD", f:"Oracle Virtual Directory", c:"people", d:"From HM Project documentation (verified). Oracle Virtual Directory.", v:true },
+  { a:"OVM", f:"Oracle Virtual Machine", c:"cloud", d:"From HM Project documentation (verified). Oracle Virtual Machine.", v:true },
+  { a:"OWASP", f:"Open Web Application Security Project", c:"general", d:"From HM Project documentation (verified). Open Web Application Security Project.", v:true },
+  { a:"OWEI", f:"Other Work Eligible Individual", c:"people", d:"TANF classification — work-required but with exception categories (DV, VR, SA).", v:true },
+  { a:"OWSM", f:"Oracle web service manager", c:"people", d:"From HM Project documentation (verified). Oracle web service manager.", v:true },
+  { a:"P&P", f:"pending and processing", c:"general", d:"From HM Project documentation (verified). pending and processing.", v:true },
+  { a:"P20", f:"Hawai'i Partnership for Education", c:"net", d:"From HM Project documentation (verified). Hawai'i Partnership for Education.", v:true },
+  { a:"PA", f:"physical architect", c:"people", d:"From HM Project documentation (verified). physical architect.", v:true },
+  { a:"PA", f:"primary applicant", c:"people", d:"From HM Project documentation (verified). primary applicant.", v:true },
+  { a:"PA", f:"public assistance", c:"program", d:"From HM Project documentation (verified). public assistance.", v:true },
+  { a:"PaaS", f:"Platform as a Service", c:"cloud", d:"Cloud service model — vendor manages the OS and runtime; you manage the app.", v:true },
+  { a:"pac", f:"Power Apps CLI", c:"devops", d:"Power Platform CLI used to export/import managed solutions across environments.", v:false },
+  { a:"PACT", f:"Parents and Children Together", c:"people", d:"From HM Project documentation (verified). Parents and Children Together.", v:true },
+  { a:"Pacxa", f:"Pacxa (Pacific and exabyte)", c:"general", d:"From HM Project documentation (verified). Pacxa (Pacific and exabyte).", v:true },
+  { a:"PAIS", f:"Public Assistance Information System", c:"tech", d:"DHS citizen-facing application portal for SNAP and TANF benefits.", v:true },
+  { a:"PAM", f:"Privileged Access Management", c:"security", d:"Practice of controlling and monitoring elevated access. UAM implements PAM for PP.", v:false },
+  { a:"PAN", f:"primary account number", c:"general", d:"From HM Project documentation (verified). primary account number.", v:true },
+  { a:"PAP", f:"policy access point", c:"compliance", d:"From HM Project documentation (verified). policy access point.", v:true },
+  { a:"PAR", f:"Poses A Risk", c:"general", d:"From HM Project documentation (verified). Poses A Risk.", v:true },
+  { a:"PARIS", f:"Public Assistance Reporting Information System", c:"program", d:"From HM Project documentation (verified). Public Assistance Reporting Information System.", v:true },
+  { a:"PASS", f:"plan to achieve self-support", c:"doc", d:"From HM Project documentation (verified). plan to achieve self-support.", v:true },
+  { a:"PATCH", f:"People Attentive to Children", c:"general", d:"From HM Project documentation (verified). People Attentive to Children.", v:true },
+  { a:"PC", f:"processing center", c:"general", d:"From HM Project documentation (verified). processing center.", v:true },
+  { a:"PC", f:"program clarification", c:"general", d:"From HM Project documentation (verified). program clarification.", v:true },
+  { a:"PCG", f:"Public Consulting Group, Inc.", c:"general", d:"From HM Project documentation (verified). Public Consulting Group, Inc..", v:true },
+  { a:"PCN", f:"permanent case number (BES acronym)", c:"general", d:"From HM Project documentation (verified). permanent case number (BES acronym).", v:true },
+  { a:"PCN", f:"Personnel Control Number", c:"general", d:"From HM Project documentation (verified). Personnel Control Number.", v:true },
+  { a:"PCs", f:"policy clarifications", c:"compliance", d:"From HM Project documentation (verified). policy clarifications.", v:true },
+  { a:"PD", f:"The 2-letter designation in HANA for POD", c:"doc", d:"From HM Project documentation (verified). The 2-letter designation in HANA for POD.", v:true },
+  { a:"PDD", f:"prospective disability determination", c:"general", d:"From HM Project documentation (verified). prospective disability determination.", v:true },
+  { a:"PDF", f:"Portable Document Format", c:"doc", d:"Document format used for letters, reports, notices.", v:true },
+  { a:"PDG", f:"Preschool Development Grant", c:"program", d:"From HM Project documentation (verified). Preschool Development Grant.", v:true },
+  { a:"PDQ", f:"predefined query", c:"general", d:"From HM Project documentation (verified). predefined query.", v:true },
+  { a:"PE", f:"periodic group", c:"net", d:"From HM Project documentation (verified). periodic group.", v:true },
+  { a:"PE", f:"Private Endpoint", c:"net", d:"Azure resource access via private IP inside a VNet (instead of public endpoint).", v:false },
+  { a:"PEDS", f:"Parent's Evaluation of Developmental Status", c:"people", d:"From HM Project documentation (verified). Parent's Evaluation of Developmental Status.", v:true },
+  { a:"PFI", f:"program funding indicator", c:"general", d:"From HM Project documentation (verified). program funding indicator.", v:true },
+  { a:"PHI", f:"Protected Health Information", c:"security", d:"Health-related PII under HIPAA. Relevant for Med-QUEST integration.", v:true },
+  { a:"PI", f:"primary individual", c:"people", d:"From HM Project documentation (verified). primary individual.", v:true },
+  { a:"PI", f:"product increment", c:"general", d:"From HM Project documentation (verified). product increment.", v:true },
+  { a:"PI", f:"program increment", c:"general", d:"From HM Project documentation (verified). program increment.", v:true },
+  { a:"PIA", f:"privacy impact assessment", c:"general", d:"From HM Project documentation (verified). privacy impact assessment.", v:true },
+  { a:"PIA", f:"project impact analysis", c:"general", d:"From HM Project documentation (verified). project impact analysis.", v:true },
+  { a:"PII", f:"Personally Identifiable Information", c:"security", d:"Data that can identify an individual (SSN, DOB, etc.). Triggers column-level security.", v:true },
+  { a:"PIO", f:"public information officer", c:"people", d:"From HM Project documentation (verified). public information officer.", v:true },
+  { a:"PIT", f:"point-in-time", c:"general", d:"From HM Project documentation (verified). point-in-time.", v:true },
+  { a:"PIV", f:"Personal Identity Verification", c:"security", d:"Federal smartcard standard. DHS workers use PIV via ADFS for sign-in.", v:false },
+  { a:"PK", f:"Primary Key", c:"data", d:"Unique identifier column in a database table.", v:false },
+  { a:"PL", f:"Planning (NIST family)", c:"compliance", d:"NIST 800-53 family covering security planning, rules of behavior, system architecture.", v:false },
+  { a:"PM", f:"Post meridiem (after noon)", c:"people", d:"From HM Project documentation (verified). Post meridiem (after noon).", v:true },
+  { a:"PM", f:"presentation model", c:"people", d:"From HM Project documentation (verified). presentation model.", v:true },
+  { a:"PM", f:"Project Manager", c:"people", d:"Manages schedule, scope, and delivery of project work-streams.", v:true },
+  { a:"PMBOK", f:"project management body of knowledge", c:"net", d:"From HM Project documentation (verified). project management body of knowledge.", v:true },
+  { a:"PMD", f:"programming mistake detector", c:"general", d:"From HM Project documentation (verified). programming mistake detector.", v:true },
+  { a:"PMI", f:"Project Management Institute", c:"general", d:"From HM Project documentation (verified). Project Management Institute.", v:true },
+  { a:"PMO", f:"Project Management Office", c:"general", d:"From HM Project documentation (verified). Project Management Office.", v:true },
+  { a:"PMP", f:"Project Management Plan", c:"doc", d:"From HM Project documentation (verified). Project Management Plan.", v:true },
+  { a:"PMR", f:"project management review", c:"doc", d:"From HM Project documentation (verified). project management review.", v:true },
+  { a:"PMT", f:"project management team", c:"general", d:"From HM Project documentation (verified). project management team.", v:true },
+  { a:"PO", f:"product owner", c:"people", d:"From HM Project documentation (verified). product owner.", v:true },
+  { a:"PO", f:"Program Office", c:"general", d:"From HM Project documentation (verified). Program Office.", v:true },
+  { a:"PO", f:"purchase order", c:"general", d:"From HM Project documentation (verified). purchase order.", v:true },
+  { a:"POA&M", f:"Plan of Action and Milestones", c:"compliance", d:"Tracking document for security findings and their remediation timelines.", v:false },
+  { a:"POA&M", f:"plan of actions and milestones", c:"compliance", d:"From HM Project documentation (verified). plan of actions and milestones.", v:true },
+  { a:"POC", f:"point of contact", c:"general", d:"From HM Project documentation (verified). point of contact.", v:true },
+  { a:"POC", f:"Proof of Concept", c:"general", d:"Small-scope demo proving a concept is feasible.", v:true },
+  { a:"POD", f:"Preschool Open Doors", c:"program", d:"Hawai'i preschool subsidy program for low-income families.", v:true },
+  { a:"PONO", f:"Pursuit of New Opportunities", c:"general", d:"From HM Project documentation (verified). Pursuit of New Opportunities.", v:true },
+  { a:"POS", f:"point of Sale", c:"general", d:"From HM Project documentation (verified). point of Sale.", v:true },
+  { a:"PowerShell", f:"PowerShell (Microsoft scripting)", c:"devops", d:"Object-oriented scripting language used for Azure/PP admin automation.", v:false },
+  { a:"PP", f:"Power Platform", c:"cloud", d:"Microsoft low-code suite (Power Apps, Power Automate, Power Pages, Dataverse, Power BI).", v:true },
+  { a:"PPAC", f:"Power Platform Admin Center", c:"cloud", d:"Microsoft web console for managing PP environments, users, capacity, DLP, and CoE features.", v:false },
+  { a:"PPDO", f:"Program and Policy Development Office", c:"compliance", d:"From HM Project documentation (verified). Program and Policy Development Office.", v:true },
+  { a:"PPE", f:"personal protective equipment", c:"general", d:"From HM Project documentation (verified). personal protective equipment.", v:true },
+  { a:"PPVN", f:"partners/provider/vendors/NGOs", c:"general", d:"From HM Project documentation (verified). partners/provider/vendors/NGOs.", v:true },
+  { a:"PR", f:"physical renderer", c:"devops", d:"From HM Project documentation (verified). physical renderer.", v:true },
+  { a:"PR", f:"policy rules", c:"devops", d:"From HM Project documentation (verified). policy rules.", v:true },
+  { a:"PR", f:"Pull Request", c:"devops", d:"Code review + merge request in Git workflow.", v:false },
+  { a:"PR", f:"pull requests", c:"devops", d:"From HM Project documentation (verified). pull requests.", v:true },
+  { a:"PRT", f:"portal run time", c:"general", d:"From HM Project documentation (verified). portal run time.", v:true },
+  { a:"PRWORA", f:"Personal Responsibility and Work Opportunity Reconciliation Act of 1996", c:"compliance", d:"From HM Project documentation (verified). Personal Responsibility and Work Opportunity Reconciliation Act of 1996.", v:true },
+  { a:"PUPS", f:"Prisoner Updates Processing System", c:"general", d:"From HM Project documentation (verified). Prisoner Updates Processing System.", v:true },
+  { a:"PW", f:"password", c:"general", d:"From HM Project documentation (verified). password.", v:true },
+  { a:"PW", f:"plug-in wrapper", c:"general", d:"From HM Project documentation (verified). plug-in wrapper.", v:true },
+  { a:"PWA", f:"Progressive Web App", c:"ui", d:"Web app that behaves like a native app (offline, installable).", v:false },
+  { a:"PWE", f:"principal wage earner", c:"general", d:"From HM Project documentation (verified). principal wage earner.", v:true },
+  { a:"QA", f:"Quality Assurance", c:"devops", d:"Testing function and gate before production release. HM Gold tier = QA environment.", v:true },
+  { a:"QC", f:"quality control", c:"general", d:"From HM Project documentation (verified). quality control.", v:true },
+  { a:"QMP", f:"Quality Management Plan", c:"doc", d:"From HM Project documentation (verified). Quality Management Plan.", v:true },
+  { a:"QMW", f:"Quality Maintenance Worker", c:"people", d:"From HM Project documentation (verified). Quality Maintenance Worker.", v:true },
+  { a:"QPR", f:"Quality Progress Report", c:"doc", d:"From HM Project documentation (verified). Quality Progress Report.", v:true },
+  { a:"QRIS", f:"Quality Rating and Improvement System", c:"general", d:"From HM Project documentation (verified). Quality Rating and Improvement System.", v:true },
+  { a:"QUEST", f:"Med-QUEST", c:"program", d:"Hawai'i's Medicaid managed-care program, operated by the Med-QUEST Division of DHS.", v:false },
+  { a:"QUEST", f:"The QUEST program: Quality care, Universal access, Efficient utilization, Stabilizing costs, Transform health care", c:"program", d:"From HM Project documentation (verified). The QUEST program: Quality care, Universal access, Efficient utilization, Stabilizing costs, Transform health care.", v:true },
+  { a:"RA", f:"Risk Assessment (NIST family)", c:"compliance", d:"NIST 800-53 family covering security categorization, vulnerability scanning.", v:false },
+  { a:"RAC", f:"report a change", c:"doc", d:"From HM Project documentation (verified). report a change.", v:true },
+  { a:"RACF", f:"Resource Access Control Facility", c:"security", d:"From HM Project documentation (verified). Resource Access Control Facility.", v:true },
+  { a:"RBA", f:"role-based access", c:"general", d:"From HM Project documentation (verified). role-based access.", v:true },
+  { a:"RBAC", f:"role-base access control", c:"security", d:"From HM Project documentation (verified). role-base access control.", v:true },
+  { a:"RBAC", f:"Role-Based Access Control", c:"security", d:"Authorization pattern. Dataverse security roles + UAM Hub-Spoke implement this.", v:false },
+  { a:"RCR", f:"Repeating Component Requests", c:"general", d:"From HM Project documentation (verified). Repeating Component Requests.", v:true },
+  { a:"RDBMS", f:"Relational Database Management System", c:"data", d:"From HM Project documentation (verified). Relational Database Management System.", v:true },
+  { a:"REG", f:"Child Care: Accredited Care, Preschool Care, Regular, Infant/Toddler, Hawaiian Medium", c:"program", d:"From HM Project documentation (verified). Child Care: Accredited Care, Preschool Care, Regular, Infant/Toddler, Hawaiian Medium.", v:true },
+  { a:"REST", f:"Representational State Transfer", c:"net", d:"HTTP-based API architectural style. Apigee + APIM expose REST APIs.", v:true },
+  { a:"RFP", f:"request for proposal", c:"general", d:"From HM Project documentation (verified). request for proposal.", v:true },
+  { a:"RIC", f:"Regional Information Center", c:"general", d:"From HM Project documentation (verified). Regional Information Center.", v:true },
+  { a:"RICEFW", f:"reports, interface, conversion, enhancements, forms, and workflow", c:"general", d:"From HM Project documentation (verified). reports, interface, conversion, enhancements, forms, and workflow.", v:true },
+  { a:"RIDP", f:"remote identity proofing", c:"general", d:"From HM Project documentation (verified). remote identity proofing.", v:true },
+  { a:"RMT", f:"risk management tool", c:"general", d:"From HM Project documentation (verified). risk management tool.", v:true },
+  { a:"RMTS", f:"random moment time sampling", c:"general", d:"From HM Project documentation (verified). random moment time sampling.", v:true },
+  { a:"RO", f:"read-only", c:"general", d:"From HM Project documentation (verified). read-only.", v:true },
+  { a:"ROB", f:"rules of behavior", c:"general", d:"From HM Project documentation (verified). rules of behavior.", v:true },
+  { a:"ROI", f:"return on investment", c:"general", d:"From HM Project documentation (verified). return on investment.", v:true },
+  { a:"ROM", f:"rough order of magnitude", c:"general", d:"From HM Project documentation (verified). rough order of magnitude.", v:true },
+  { a:"RPO", f:"Recovery Point Objective", c:"security", d:"Maximum acceptable data loss measured in time (e.g., 15 min for Synapse Link).", v:false },
+  { a:"RSD", f:"Requirements Specifications Document", c:"doc", d:"From HM Project documentation (verified). Requirements Specifications Document.", v:true },
+  { a:"RSDI", f:"Retirement, Survivors, and Disability Insurance", c:"general", d:"From HM Project documentation (verified). Retirement, Survivors, and Disability Insurance.", v:true },
+  { a:"RT", f:"real time", c:"general", d:"From HM Project documentation (verified). real time.", v:true },
+  { a:"RTM", f:"Requirements Traceability Matrix", c:"doc", d:"From HM Project documentation (verified). Requirements Traceability Matrix.", v:true },
+  { a:"RTO", f:"Recovery Time Objective", c:"security", d:"Maximum acceptable downtime before service is restored.", v:false },
+  { a:"RTTT", f:"Race to the top (POD-RTTT)", c:"general", d:"From HM Project documentation (verified). Race to the top (POD-RTTT).", v:true },
+  { a:"S2S", f:"Server to Server", c:"security", d:"Service-principal authentication pattern. Used by the UAM App Registration.", v:false },
+  { a:"SA", f:"Section Administrator", c:"people", d:"From HM Project documentation (verified). Section Administrator.", v:true },
+  { a:"SA", f:"security architect", c:"people", d:"From HM Project documentation (verified). security architect.", v:true },
+  { a:"SA", f:"Substance Abuse", c:"people", d:"WEI/OWEI subcategory for individuals with substance-abuse treatment requirements.", v:true },
+  { a:"SA", f:"systems analyst", c:"people", d:"From HM Project documentation (verified). systems analyst.", v:true },
+  { a:"SaaS", f:"Software as a Service", c:"cloud", d:"Cloud service model — vendor manages the whole app (e.g., Dataverse, Office 365).", v:true },
+  { a:"SACWIS", f:"Statewide Automated Child Welfare Information System", c:"program", d:"From HM Project documentation (verified). Statewide Automated Child Welfare Information System.", v:true },
+  { a:"SAI", f:"Siebel Application Interface", c:"general", d:"From HM Project documentation (verified). Siebel Application Interface.", v:true },
+  { a:"SAML", f:"Security Assertion Markup Language", c:"net", d:"From HM Project documentation (verified). Security Assertion Markup Language.", v:true },
+  { a:"SAP", f:"Systems Applications and Products", c:"general", d:"From HM Project documentation (verified). Systems Applications and Products.", v:true },
+  { a:"SAVE", f:"Systematic Alien Verification for Entitlements", c:"general", d:"From HM Project documentation (verified). Systematic Alien Verification for Entitlements.", v:true },
+  { a:"SB", f:"Statewide Branch for DHS/BESSD", c:"agency", d:"From HM Project documentation (verified). Statewide Branch for DHS/BESSD.", v:true },
+  { a:"SB/SP", f:"subfield/superfield", c:"general", d:"From HM Project documentation (verified). subfield/superfield.", v:true },
+  { a:"SBA", f:"Statewide Branch Administrator", c:"agency", d:"From HM Project documentation (verified). Statewide Branch Administrator.", v:true },
+  { a:"SBL", f:"Siebel Public Sector CRM", c:"general", d:"From HM Project documentation (verified). Siebel Public Sector CRM.", v:true },
+  { a:"SBS", f:"Shaken Baby Syndrome", c:"general", d:"From HM Project documentation (verified). Shaken Baby Syndrome.", v:true },
+  { a:"SBSD", f:"Statewide Branch Support Desk", c:"agency", d:"DHS support center run by eWorld on Google Cloud CCAI-P. Supports childcare clients applying for DHS programs.", v:false },
+  { a:"SC", f:"System and Communications (NIST family)", c:"compliance", d:"NIST 800-53 family of controls covering network/transport-level security.", v:false },
+  { a:"SCA", f:"service component architecture", c:"people", d:"From HM Project documentation (verified). service component architecture.", v:true },
+  { a:"SCA", f:"special circumstance allowances", c:"net", d:"From HM Project documentation (verified). special circumstance allowances.", v:true },
+  { a:"SCHIP", f:"States Children's Health Insurance Program", c:"general", d:"From HM Project documentation (verified). States Children's Health Insurance Program.", v:true },
+  { a:"SCIM", f:"System for Cross-domain Identity Management", c:"security", d:"From HM Project documentation (verified). System for Cross-domain Identity Management.", v:true },
+  { a:"SCM", f:"source code management", c:"general", d:"From HM Project documentation (verified). source code management.", v:true },
+  { a:"SCSEP", f:"Senior Community Service Employment Program", c:"program", d:"From HM Project documentation (verified). Senior Community Service Employment Program.", v:true },
+  { a:"SDF", f:"Unisys Services and Solutions delivery framework", c:"general", d:"From HM Project documentation (verified). Unisys Services and Solutions delivery framework.", v:true },
+  { a:"SDLC", f:"Software Development Life Cycle", c:"devops", d:"End-to-end software-engineering process: requirements → design → build → test → deploy → operate.", v:true },
+  { a:"SDO", f:"Staff Development Office", c:"agency", d:"From HM Project documentation (verified). Staff Development Office.", v:true },
+  { a:"SDO", f:"State Delivery Office", c:"agency", d:"DHS office owning the Training environment in the SDLC.", v:false },
+  { a:"SDX", f:"State Data Exchange", c:"general", d:"From HM Project documentation (verified). State Data Exchange.", v:true },
+  { a:"SEE", f:"Supporting Employment Empowerment program (SEE Hawaii Work)", c:"program", d:"From HM Project documentation (verified). Supporting Employment Empowerment program (SEE Hawaii Work).", v:true },
+  { a:"SES", f:"system external specification", c:"doc", d:"From HM Project documentation (verified). system external specification.", v:true },
+  { a:"SF", f:"state funded", c:"general", d:"From HM Project documentation (verified). state funded.", v:true },
+  { a:"sFTP", f:"Secure File Transfer Protocol", c:"net", d:"File transfer over SSH. Used by FIS, FAMIS, HARI, DOE A+, Cardinal integrations.", v:true },
+  { a:"SFU", f:"standard filing unit", c:"compliance", d:"From HM Project documentation (verified). standard filing unit.", v:true },
+  { a:"SHIR", f:"Self-Hosted Integration Runtime", c:"cloud", d:"ADF agent installed on a VM that lets ADF reach on-premise Oracle.", v:false },
+  { a:"SI", f:"Systems Integrator", c:"general", d:"From HM Project documentation (verified). Systems Integrator.", v:true },
+  { a:"SID", f:"schema information document", c:"doc", d:"From HM Project documentation (verified). schema information document.", v:true },
+  { a:"SIDS", f:"Sudden Infant Death Syndrome", c:"general", d:"From HM Project documentation (verified). Sudden Infant Death Syndrome.", v:true },
+  { a:"SIEM", f:"Security Information and Event Management", c:"security", d:"Aggregated security log analysis. HM uses Microsoft Sentinel as SIEM.", v:true },
+  { a:"SIRT", f:"system integrity review tool", c:"doc", d:"From HM Project documentation (verified). system integrity review tool.", v:true },
+  { a:"SIT", f:"System Integration Testing", c:"devops", d:"End-to-end testing across integrated components. Consolidated into QA (Gold) per HM TES.", v:true },
+  { a:"SLA", f:"Service Level Agreement", c:"general", d:"Vendor-published availability/performance commitments (e.g., Power Platform GCC SLA).", v:true },
+  { a:"SLDS", f:"State Longitudinal Data System", c:"devops", d:"From HM Project documentation (verified). State Longitudinal Data System.", v:true },
+  { a:"SLI", f:"service level indicator", c:"devops", d:"From HM Project documentation (verified). service level indicator.", v:true },
+  { a:"SLO", f:"service level objectives", c:"devops", d:"From HM Project documentation (verified). service level objectives.", v:true },
+  { a:"SME", f:"Subject Matter Expert", c:"people", d:"Functional or domain expert advising on requirements and design.", v:true },
+  { a:"SMI", f:"State's Median Income", c:"general", d:"From HM Project documentation (verified). State's Median Income.", v:true },
+  { a:"SMI", f:"supplementary medical insurance", c:"general", d:"From HM Project documentation (verified). supplementary medical insurance.", v:true },
+  { a:"SMOCN", f:"special mail Out case numbers", c:"general", d:"From HM Project documentation (verified). special mail Out case numbers.", v:true },
+  { a:"SMRF", f:"six-month report form", c:"doc", d:"From HM Project documentation (verified). six-month report form.", v:true },
+  { a:"SMS", f:"Short message service; otherwise known as a text message", c:"general", d:"From HM Project documentation (verified). Short message service; otherwise known as a text message.", v:true },
+  { a:"SMS", f:"SSMS/system management section", c:"general", d:"From HM Project documentation (verified). SSMS/system management section.", v:true },
+  { a:"SMTP", f:"simple mail transfer protocol", c:"general", d:"From HM Project documentation (verified). simple mail transfer protocol.", v:true },
+  { a:"SNAP", f:"Supplemental Nutrition Assistance Program", c:"program", d:"Federal food-assistance program (formerly Food Stamps). One of the largest BESSD programs.", v:true },
+  { a:"SNAPO", f:"Supplemental Nutrition Assistance Program Office", c:"program", d:"From HM Project documentation (verified). Supplemental Nutrition Assistance Program Office.", v:true },
+  { a:"SO", f:"solution optimization", c:"general", d:"From HM Project documentation (verified). solution optimization.", v:true },
+  { a:"SOA", f:"service oriented architecture", c:"people", d:"From HM Project documentation (verified). service oriented architecture.", v:true },
+  { a:"SOA", f:"Standard of Assistance", c:"program", d:"From HM Project documentation (verified). Standard of Assistance.", v:true },
+  { a:"SOAP", f:"Simple Object Access Protocol", c:"net", d:"XML-based legacy API protocol still used by some external partners.", v:true },
+  { a:"SOAP", f:"Solution Optimization Analysis and Plan", c:"net", d:"From HM Project documentation (verified). Solution Optimization Analysis and Plan.", v:true },
+  { a:"SOC", f:"System and Organization Controls", c:"general", d:"From HM Project documentation (verified). System and Organization Controls.", v:true },
+  { a:"SOLQ", f:"state online query", c:"general", d:"From HM Project documentation (verified). state online query.", v:true },
+  { a:"SOLQ-I", f:"state online query internet", c:"general", d:"From HM Project documentation (verified). state online query internet.", v:true },
+  { a:"SON", f:"Standard of Need", c:"compliance", d:"From HM Project documentation (verified). Standard of Need.", v:true },
+  { a:"SOP", f:"standard operating procedure", c:"compliance", d:"From HM Project documentation (verified). standard operating procedure.", v:true },
+  { a:"SORO", f:"State Office of Regulatory Oversight", c:"agency", d:"DHS office owning the User Acceptance Testing (UAT) environment.", v:false },
+  { a:"SORO", f:"Systems Operations and Requirements Office", c:"agency", d:"From HM Project documentation (verified). Systems Operations and Requirements Office.", v:true },
+  { a:"SOW", f:"statement of work", c:"general", d:"From HM Project documentation (verified). statement of work.", v:true },
+  { a:"SP", f:"Special Publication", c:"compliance", d:"NIST document series (e.g., NIST SP 800-53 Rev. 5 — the security-controls catalog).", v:true },
+  { a:"SPA", f:"Single-Page Application", c:"ui", d:"Web app pattern where one HTML loads and JS routes between views.", v:false },
+  { a:"SPAAs", f:"State Public Assistance Agencies", c:"program", d:"From HM Project documentation (verified). State Public Assistance Agencies.", v:true },
+  { a:"SPMP", f:"software project management plan", c:"doc", d:"From HM Project documentation (verified). software project management plan.", v:true },
+  { a:"SPN", f:"Service Principal Name", c:"cloud", d:"From HM Project documentation (verified). Service Principal Name.", v:true },
+  { a:"SQL", f:"Structured Query Language", c:"data", d:"Standard query language for relational databases.", v:true },
+  { a:"SR", f:"service request", c:"general", d:"From HM Project documentation (verified). service request.", v:true },
+  { a:"SR", f:"Simplified Reporting", c:"general", d:"From HM Project documentation (verified). Simplified Reporting.", v:true },
+  { a:"SRF", f:"Simplified Report Form", c:"doc", d:"From HM Project documentation (verified). Simplified Report Form.", v:true },
+  { a:"SRS", f:"Software Requirements Specification", c:"doc", d:"Detailed functional/non-functional requirements document.", v:false },
+  { a:"SSA", f:"Social Security Administration", c:"agency", d:"US federal agency. HANA queries SSA for SSN verification, disability, retirement.", v:true },
+  { a:"SSBM", f:"supported state-based marketplace", c:"general", d:"From HM Project documentation (verified). supported state-based marketplace.", v:true },
+  { a:"SSD", f:"Social Services Division", c:"agency", d:"From HM Project documentation (verified). Social Services Division.", v:true },
+  { a:"SSDI", f:"Social Security Disability Insurance", c:"agency", d:"From HM Project documentation (verified). Social Security Disability Insurance.", v:true },
+  { a:"SSI", f:"Supplemental Security Income", c:"program", d:"From HM Project documentation (verified). Supplemental Security Income.", v:true },
+  { a:"SSL", f:"secure sockets layer", c:"agency", d:"From HM Project documentation (verified). secure sockets layer.", v:true },
+  { a:"SSMS", f:"Systems Software Management Staff (a section of OIT)", c:"general", d:"From HM Project documentation (verified). Systems Software Management Staff (a section of OIT).", v:true },
+  { a:"SSN", f:"Social Security number", c:"agency", d:"From HM Project documentation (verified). Social Security number.", v:true },
+  { a:"SSO", f:"single sign on", c:"security", d:"From HM Project documentation (verified). single sign on.", v:true },
+  { a:"SSO", f:"Single Sign-On", c:"security", d:"User authenticates once, accesses many apps (HANA uses Entra ID SSO).", v:false },
+  { a:"SSP", f:"Self-Service Portal", c:"general", d:"From HM Project documentation (verified). Self-Service Portal.", v:true },
+  { a:"SSP", f:"Support Service Payment", c:"general", d:"From HM Project documentation (verified). Support Service Payment.", v:true },
+  { a:"SSP", f:"Support Service Plan (DHS 726; FTW)", c:"agency", d:"From HM Project documentation (verified). Support Service Plan (DHS 726; FTW).", v:true },
+  { a:"SSP", f:"System Security Plan", c:"doc", d:"From HM Project documentation (verified). System Security Plan.", v:true },
+  { a:"SSS", f:"SSMS/Systems Security Section", c:"general", d:"From HM Project documentation (verified). SSMS/Systems Security Section.", v:true },
+  { a:"STANF", f:"state-funded TANF", c:"program", d:"From HM Project documentation (verified). state-funded TANF.", v:true },
+  { a:"SUA", f:"standard utility allowance", c:"compliance", d:"From HM Project documentation (verified). standard utility allowance.", v:true },
+  { a:"SVES", f:"State Verification and Exchange System", c:"general", d:"From HM Project documentation (verified). State Verification and Exchange System.", v:true },
+  { a:"SVM", f:"Services Management", c:"program", d:"Planned modernization module (empty container today). Likely scope for D11 Referral + D12 Case Planning.", v:false },
+  { a:"SVN", f:"subversion", c:"general", d:"From HM Project documentation (verified). subversion.", v:true },
+  { a:"SW", f:"Social Worker", c:"people", d:"From HM Project documentation (verified). Social Worker.", v:true },
+  { a:"SWICA", f:"State Wage Information Collection Agency", c:"agency", d:"From HM Project documentation (verified). State Wage Information Collection Agency.", v:true },
+  { a:"SWT", f:"Siebel Web Template", c:"doc", d:"From HM Project documentation (verified). Siebel Web Template.", v:true },
+  { a:"TA", f:"Technical Architect", c:"people", d:"Owns the system architecture, design decisions, and technical standards.", v:false },
+  { a:"TA", f:"Technical Assistance", c:"people", d:"From HM Project documentation (verified). Technical Assistance.", v:true },
+  { a:"TAC", f:"Technology Advisory Committee", c:"agency", d:"From HM Project documentation (verified). Technology Advisory Committee.", v:true },
+  { a:"TANF", f:"Temporary Assistance for Needy Families", c:"program", d:"Federal cash-assistance block grant for low-income families with children.", v:true },
+  { a:"TANFPA", f:"TANF Program Administrator", c:"program", d:"From HM Project documentation (verified). TANF Program Administrator.", v:true },
+  { a:"TANFPO", f:"Temporary Assistance for Needy Families (TANF) Program Office", c:"program", d:"From HM Project documentation (verified). Temporary Assistance for Needy Families (TANF) Program Office.", v:true },
+  { a:"TAONF", f:"Temporary Assistance for Other Needy Families", c:"program", d:"State-equivalent cash assistance for families not eligible for federal TANF.", v:true },
+  { a:"TBA", f:"Transitional Benefits Alternative", c:"general", d:"From HM Project documentation (verified). Transitional Benefits Alternative.", v:true },
+  { a:"TBC", f:"To Be Confirmed", c:"general", d:"Pending external confirmation (e.g., from DHS, BA, partner agency).", v:false },
+  { a:"TBD", f:"To Be Determined", c:"general", d:"Placeholder for content not yet decided.", v:true },
+  { a:"TBUI", f:"task-based user interface", c:"ui", d:"From HM Project documentation (verified). task-based user interface.", v:true },
+  { a:"TCC", f:"Transitional Child Care", c:"general", d:"From HM Project documentation (verified). Transitional Child Care.", v:true },
+  { a:"TCN", f:"temporary case number", c:"general", d:"From HM Project documentation (verified). temporary case number.", v:true },
+  { a:"TCS", f:"Transaction and Code Sets", c:"agency", d:"From HM Project documentation (verified). Transaction and Code Sets.", v:true },
+  { a:"TD", f:"technical design document", c:"doc", d:"From HM Project documentation (verified). technical design document.", v:true },
+  { a:"TDA", f:"technical design addendum", c:"doc", d:"From HM Project documentation (verified). technical design addendum.", v:true },
+  { a:"TDD", f:"Technical Design Document", c:"doc", d:"Module-level technical design (architecture, schema, flows). Each module has one.", v:false },
+  { a:"TDD", f:"telecommunications device for the deaf", c:"doc", d:"From HM Project documentation (verified). telecommunications device for the deaf.", v:true },
+  { a:"TDE", f:"Transparent Data Encryption", c:"security", d:"At-rest database encryption. Azure SQL uses TDE AES-256 by default.", v:true },
+  { a:"TDR", f:"treasury deposit reciepts", c:"general", d:"From HM Project documentation (verified). treasury deposit reciepts.", v:true },
+  { a:"TDS", f:"Tabular Data Stream", c:"data", d:"SQL Server wire protocol. Power BI uses TDS endpoint to query Dataverse.", v:false },
+  { a:"TES", f:"Technical Environments Specification", c:"doc", d:"HANA Modernization deliverable HM-DDI-02.09.03.04.19 describing all SDLC environments.", v:false },
+  { a:"TIGTA", f:"Treasury Inspector General for Tax Administration", c:"agency", d:"From HM Project documentation (verified). Treasury Inspector General for Tax Administration.", v:true },
+  { a:"TIN", f:"tax identification number", c:"general", d:"From HM Project documentation (verified). tax identification number.", v:true },
+  { a:"TLF", f:"temporary labor force", c:"general", d:"From HM Project documentation (verified). temporary labor force.", v:true },
+  { a:"TLS", f:"Transport Layer Security", c:"net", d:"In-transit encryption protocol (HTTPS uses TLS). Minimum TLS 1.2 required for HM traffic.", v:true },
+  { a:"TOP", f:"Treasury Offset Program", c:"general", d:"From HM Project documentation (verified). Treasury Offset Program.", v:true },
+  { a:"TPA", f:"third-party administrator", c:"people", d:"From HM Project documentation (verified). third-party administrator.", v:true },
+  { a:"TPL", f:"third-party liability", c:"general", d:"From HM Project documentation (verified). third-party liability.", v:true },
+  { a:"TPM", f:"Technical Program Manager", c:"people", d:"Hybrid PM/TA role managing technical delivery across multiple workstreams.", v:false },
+  { a:"TPM", f:"transaction processing module", c:"people", d:"From HM Project documentation (verified). transaction processing module.", v:true },
+  { a:"TPO", f:"treatment, payment, or health care operations", c:"general", d:"From HM Project documentation (verified). treatment, payment, or health care operations.", v:true },
+  { a:"TRF", f:"ticket research file", c:"general", d:"From HM Project documentation (verified). ticket research file.", v:true },
+  { a:"TSS", f:"Transitional support services (related to NA-TR)", c:"general", d:"From HM Project documentation (verified). Transitional support services (related to NA-TR).", v:true },
+  { a:"TTW", f:"teletypewriter", c:"people", d:"From HM Project documentation (verified). teletypewriter.", v:true },
+  { a:"UAM", f:"User Access Management", c:"security", d:"The DHS Security & Audit solution. Already in production (V1.0.0.7) as the first deployed module.", v:false },
+  { a:"UAT", f:"user acceptance test", c:"devops", d:"From HM Project documentation (verified). user acceptance test.", v:true },
+  { a:"UAT", f:"User Acceptance Testing", c:"devops", d:"Pre-prod validation by DHS stakeholders. Done in the dedicated UAT environment (SORO-owned).", v:false },
+  { a:"UC", f:"use case", c:"general", d:"From HM Project documentation (verified). use case.", v:true },
+  { a:"UCM", f:"universal content management", c:"general", d:"From HM Project documentation (verified). universal content management.", v:true },
+  { a:"UFUE", f:"Up-Front Universal Engagement", c:"general", d:"From HM Project documentation (verified). Up-Front Universal Engagement.", v:true },
+  { a:"UHCC", f:"University of Hawaii Community Colleges", c:"general", d:"From HM Project documentation (verified). University of Hawaii Community Colleges.", v:true },
+  { a:"UI", f:"User Interface", c:"ui", d:"The visible part of the app users interact with.", v:true },
+  { a:"UIB", f:"Unemployment Insurance Benefits", c:"program", d:"From HM Project documentation (verified). Unemployment Insurance Benefits.", v:true },
+  { a:"UIPA", f:"Uniform Information Practices Act", c:"compliance", d:"From HM Project documentation (verified). Uniform Information Practices Act.", v:true },
+  { a:"UK", f:"Unique Key", c:"data", d:"Database constraint enforcing uniqueness on one or more columns.", v:false },
+  { a:"UN/CEFACT", f:"United Nations Centre For Trade Facilitation and Electronic Business", c:"general", d:"From HM Project documentation (verified). United Nations Centre For Trade Facilitation and Electronic Business.", v:true },
+  { a:"UP", f:"unemployed parent", c:"people", d:"From HM Project documentation (verified). unemployed parent.", v:true },
+  { a:"UPLINK", f:"Uniting Peer Learning, Integrating New Knowledge", c:"net", d:"From HM Project documentation (verified). Uniting Peer Learning, Integrating New Knowledge.", v:true },
+  { a:"UPN", f:"User Principal Name", c:"security", d:"Entra ID user identifier in email-address form (e.g., user@ewdevlabs.onmicrosoft.com).", v:false },
+  { a:"URI", f:"Uniform Resource Identifier", c:"general", d:"From HM Project documentation (verified). Uniform Resource Identifier.", v:true },
+  { a:"URL", f:"Uniform Resource Locator", c:"net", d:"Web address.", v:true },
+  { a:"USCIS", f:"U.S. Citizenship and Immigration Services", c:"agency", d:"From HM Project documentation (verified). U.S. Citizenship and Immigration Services.", v:true },
+  { a:"USDA", f:"United States Department of Agriculture", c:"agency", d:"Federal agency overseeing SNAP. HANA reports to USDA's Food and Nutrition Service.", v:true },
+  { a:"UTC", f:"coordinated universal time", c:"general", d:"From HM Project documentation (verified). coordinated universal time.", v:true },
+  { a:"UUID", f:"Universally Unique Identifier", c:"data", d:"Alias for GUID. Same format/concept.", v:false },
+  { a:"UX", f:"User Experience", c:"ui", d:"The end-to-end experience a user has with the system.", v:true },
+  { a:"VA", f:"Veteran Affairs (U.S. Department of)", c:"agency", d:"From HM Project documentation (verified). Veteran Affairs (U.S. Department of).", v:true },
+  { a:"VBC", f:"virtual business component", c:"general", d:"From HM Project documentation (verified). virtual business component.", v:true },
+  { a:"VCPU", f:"virtual central processing unit", c:"general", d:"From HM Project documentation (verified). virtual central processing unit.", v:true },
+  { a:"VCS", f:"Version Control System", c:"devops", d:"Git repos (Azure DevOps). 3-branch model: main / develop / feature.", v:false },
+  { a:"VCT", f:"virtual classroom training", c:"general", d:"From HM Project documentation (verified). virtual classroom training.", v:true },
+  { a:"VDB", f:"virtual database", c:"data", d:"From HM Project documentation (verified). virtual database.", v:true },
+  { a:"VEP", f:"voluntary establishment of paternity", c:"general", d:"From HM Project documentation (verified). voluntary establishment of paternity.", v:true },
+  { a:"VIS", f:"Verification Information System", c:"general", d:"From HM Project documentation (verified). Verification Information System.", v:true },
+  { a:"VLAN", f:"virtual local area network", c:"net", d:"From HM Project documentation (verified). virtual local area network.", v:true },
+  { a:"VLP", f:"verified lawful presence", c:"general", d:"From HM Project documentation (verified). verified lawful presence.", v:true },
+  { a:"VM", f:"Virtual Machine", c:"cloud", d:"Azure compute primitive (used for SHIR, legacy connectors, and Oracle source DB).", v:true },
+  { a:"VNet", f:"Virtual Network", c:"net", d:"Azure private network. Hub-Spoke topology splits prod/non-prod VNets.", v:false },
+  { a:"VPC", f:"virtual private cloud", c:"general", d:"From HM Project documentation (verified). virtual private cloud.", v:true },
+  { a:"VPN", f:"Virtual Private Network", c:"net", d:"Encrypted tunnel to private network. NordLayer VPN currently planned for Oracle access.", v:true },
+  { a:"VR", f:"Vocational Rehabilitation", c:"people", d:"WEI/OWEI subcategory for individuals in vocational rehabilitation.", v:true },
+  { a:"VRA", f:"vocational rehabilitation administrator", c:"people", d:"From HM Project documentation (verified). vocational rehabilitation administrator.", v:true },
+  { a:"VUR", f:"verified upon receipt", c:"general", d:"From HM Project documentation (verified). verified upon receipt.", v:true },
+  { a:"W", f:"waived (waived under special circumstances)", c:"general", d:"From HM Project documentation (verified). waived (waived under special circumstances).", v:true },
+  { a:"WAN", f:"wide area network", c:"net", d:"From HM Project documentation (verified). wide area network.", v:true },
+  { a:"WAR", f:"Web application resource", c:"general", d:"From HM Project documentation (verified). Web application resource.", v:true },
+  { a:"WBS", f:"Work Breakdown Structure", c:"devops", d:"Hierarchical decomposition of project work into deliverables and tasks.", v:true },
+  { a:"WCAG", f:"Web Content Accessibility Guidelines", c:"ui", d:"Accessibility standards. State sites typically target WCAG 2.1 AA.", v:true },
+  { a:"WDB", f:"Workforce Development Board", c:"general", d:"From HM Project documentation (verified). Workforce Development Board.", v:true },
+  { a:"WEI", f:"Work Eligible Individual", c:"people", d:"TANF classification — individual required to participate in work activities (e.g., FTW).", v:true },
+  { a:"WfMC", f:"Workflow Management Coalition", c:"agency", d:"International nonprofit. DHS won its 2014 Global Award for case management.", v:false },
+  { a:"WIC", f:"Women, Infants and Children program", c:"program", d:"From HM Project documentation (verified). Women, Infants and Children program.", v:true },
+  { a:"WIC", f:"Women, Infants, and Children", c:"program", d:"USDA nutrition program for women and young children (administered by DOH, integrated with DHS data).", v:false },
+  { a:"WIOA", f:"Workforce Innovation and Opportunity Act", c:"compliance", d:"From HM Project documentation (verified). Workforce Innovation and Opportunity Act.", v:true },
+  { a:"WIP", f:"Work In Progress", c:"general", d:"Active but incomplete work.", v:false },
+  { a:"WORF", f:"work registration, FS", c:"general", d:"From HM Project documentation (verified). work registration, FS.", v:true },
+  { a:"WPC", f:"work program common (use case identifier for FTW and E&T)", c:"program", d:"From HM Project documentation (verified). work program common (use case identifier for FTW and E&T).", v:true },
+  { a:"WSDL", f:"Web service definition language", c:"net", d:"From HM Project documentation (verified). Web service definition language.", v:true },
+  { a:"WVP", f:"Work Verification Plan", c:"doc", d:"From HM Project documentation (verified). Work Verification Plan.", v:true },
+  { a:"XML", f:"eXtensible Markup Language", c:"data", d:"Older structured data format. Still used by SOAP and some inbound batch feeds.", v:true },
+  { a:"XMLP", f:"extensible markup language protocol", c:"net", d:"From HM Project documentation (verified). extensible markup language protocol.", v:true },
+  { a:"XSLT", f:"extensible stylesheet language transformations", c:"net", d:"From HM Project documentation (verified). extensible stylesheet language transformations.", v:true },
+  { a:"YAML", f:"YAML Ain't Markup Language", c:"devops", d:"Configuration-file format used by Azure DevOps pipelines, Kubernetes, etc.", v:false },
+  { a:"ZIP", f:"Zone Improvement Plan", c:"doc", d:"From HM Project documentation (verified). Zone Improvement Plan.", v:true }
+];
+
+/* ============================================================
+   LOGIC — render only on input
+============================================================ */
+(() => {
+  const $search = document.getElementById('search');
+  const $clear  = document.getElementById('clearBtn');
+  const $wrap   = document.getElementById('searchWrap');
+  const $center = document.getElementById('center');
+  const $bg     = document.getElementById('pulseBg');
+  const $results = document.getElementById('results');
+  const $status = document.getElementById('status');
+  const $total  = document.getElementById('totalCount');
+
+  $total.textContent = ACRONYMS.length;
+
+  // Hint chips
+  document.querySelectorAll('.chip[data-q]').forEach(el => {
+    el.addEventListener('click', () => {
+      $search.value = el.dataset.q;
+      $search.focus();
+      onInput();
+    });
+  });
+
+  function escape(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[c]));
+  }
+  function highlight(text, q) {
+    if (!q) return escape(text);
+    const safe = escape(text);
+    const re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig');
+    return safe.replace(re, '<mark>$1</mark>');
+  }
+  function score(it, q) {
+    const acro = it.a.toLowerCase();
+    const full = it.f.toLowerCase();
+    const desc = it.d.toLowerCase();
+    const Q = q.toLowerCase();
+    if (acro === Q) return 1000;
+    if (acro.startsWith(Q)) return 800;
+    if (full.startsWith(Q)) return 700;
+    if (acro.includes(Q)) return 500;
+    if (full.includes(Q)) return 300;
+    if (desc.includes(Q)) return 100;
+    return 0;
+  }
+
+  function render(q) {
+    const Q = q.trim();
+    if (!Q) {
+      $results.innerHTML = '';
+      $status.textContent = '';
+      document.body.classList.remove('has-text');
+      $center.classList.remove('compact');
+      $bg.classList.remove('dim');
+      return;
+    }
+    document.body.classList.add('has-text');
+    $center.classList.add('compact');
+    $bg.classList.add('dim');
+
+    const items = ACRONYMS
+      .map(it => ({ it, s: score(it, Q) }))
+      .filter(x => x.s > 0)
+      .sort((a, b) => b.s - a.s || a.it.a.length - b.it.a.length);
+
+    if (!items.length) {
+      $results.innerHTML = '';
+      $status.innerHTML = `No acronyms match <strong>${escape(Q)}</strong>. Try a shorter prefix or a different word.`;
+      return;
+    }
+    $status.innerHTML = `Showing <strong>${items.length}</strong> result${items.length === 1 ? '' : 's'} for <strong>${escape(Q)}</strong>.`;
+    $results.innerHTML = items.map(({ it }) => {
+      const badge = it.v
+        ? `<span class="verified" title="Verified in HM Project documentation">
+             <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+             Verified
+           </span>`
+        : `<span class="unverified" title="Not yet verified by technical writers / PM — confirm before formal use">
+             <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+             Unverified
+           </span>`;
+      return `
+      <article class="card" role="listitem">
+        <div class="top">
+          <div class="acro">${highlight(it.a, Q)}${badge}</div>
+          <div class="cat cat-${it.c}">${it.c}</div>
+        </div>
+        <p class="full">${highlight(it.f, Q)}</p>
+        <p class="desc">${highlight(it.d, Q)}</p>
+      </article>
+    `;}).join('');
+  }
+
+  function onInput() {
+    render($search.value);
+  }
+  $search.addEventListener('input', onInput);
+
+  $clear.addEventListener('click', () => {
+    $search.value = '';
+    $search.focus();
+    onInput();
+  });
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if ($search.value) {
+        $search.value = '';
+        onInput();
+      } else {
+        $search.blur();
+      }
+    }
+    // Slash / Ctrl+K to focus
+    if ((e.key === '/' || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k')) && document.activeElement !== $search) {
+      e.preventDefault();
+      $search.focus();
+    }
+  });
+
+  // initial state — explicit no results
+  render('');
+
+  /* ============================================================
+     TABLE / BROWSE-ALL VIEW
+  ============================================================ */
+  const $browseBtn   = document.getElementById('browseToggleBtn');
+  const $browseCount = document.getElementById('browseCount');
+  const $browse      = document.getElementById('browse');
+  const $backBtn     = document.getElementById('backSearchBtn');
+  const $tableFilter = document.getElementById('tableFilter');
+  const $catFilter   = document.getElementById('catFilter');
+  const $pageSize    = document.getElementById('pageSize');
+  const $tbody       = document.getElementById('acroTbody');
+  const $pagerInfo   = document.getElementById('pagerInfo');
+  const $pagerButtons= document.getElementById('pagerButtons');
+  const $jumpPage    = document.getElementById('jumpPage');
+  const $totalPill   = document.getElementById('browseTotalPill');
+  const $vChips      = document.querySelectorAll('[data-vfilter]');
+  const $ths         = document.querySelectorAll('#acroTable thead th[data-sort]');
+
+  $browseCount.textContent = ACRONYMS.length;
+  $totalPill.textContent = `${ACRONYMS.length} entries`;
+
+  // Populate category dropdown
+  const allCats = Array.from(new Set(ACRONYMS.map(x => x.c))).sort();
+  for (const c of allCats) {
+    const o = document.createElement('option');
+    o.value = c; o.textContent = c;
+    $catFilter.appendChild(o);
+  }
+
+  // State
+  const tState = {
+    q: '',
+    cat: '',
+    v: 'all',     // 'all' | 'yes' | 'no'
+    sortKey: 'a', // a | f | c | v | d
+    sortDir: 1,   // 1 = asc, -1 = desc
+    page: 1,
+    pageSize: 50,
+  };
+
+  function openBrowse() {
+    document.body.classList.add('mode-browse');
+    renderTable();
+    // Scroll to top of browse view
+    setTimeout(() => $browse.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  }
+  function closeBrowse() {
+    document.body.classList.remove('mode-browse');
+    $search.focus();
+  }
+
+  $browseBtn.addEventListener('click', openBrowse);
+  $backBtn.addEventListener('click', closeBrowse);
+
+  $tableFilter.addEventListener('input', () => {
+    tState.q = $tableFilter.value.trim().toLowerCase();
+    tState.page = 1;
+    renderTable();
+  });
+  $catFilter.addEventListener('change', () => {
+    tState.cat = $catFilter.value;
+    tState.page = 1;
+    renderTable();
+  });
+  $vChips.forEach(chip => chip.addEventListener('click', () => {
+    $vChips.forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    tState.v = chip.dataset.vfilter;
+    tState.page = 1;
+    renderTable();
+  }));
+  $pageSize.addEventListener('change', () => {
+    tState.pageSize = parseInt($pageSize.value, 10) || 50;
+    tState.page = 1;
+    renderTable();
+  });
+  $jumpPage.addEventListener('change', () => {
+    const v = parseInt($jumpPage.value, 10);
+    if (!isNaN(v)) {
+      tState.page = Math.max(1, v);
+      renderTable();
+    }
+  });
+  $ths.forEach(th => th.addEventListener('click', () => {
+    const k = th.dataset.sort;
+    if (tState.sortKey === k) {
+      tState.sortDir *= -1;
+    } else {
+      tState.sortKey = k;
+      tState.sortDir = 1;
+    }
+    renderTable();
+  }));
+
+  function filterAndSort() {
+    const q = tState.q;
+    let arr = ACRONYMS.filter(it => {
+      if (tState.cat && it.c !== tState.cat) return false;
+      if (tState.v === 'yes' && !it.v) return false;
+      if (tState.v === 'no' && it.v) return false;
+      if (q) {
+        const hay = (it.a + ' ' + it.f + ' ' + it.d + ' ' + it.c).toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+    const k = tState.sortKey;
+    const dir = tState.sortDir;
+    arr.sort((x, y) => {
+      let vx = x[k], vy = y[k];
+      if (typeof vx === 'boolean') { vx = vx ? 1 : 0; vy = vy ? 1 : 0; }
+      else { vx = String(vx).toLowerCase(); vy = String(vy).toLowerCase(); }
+      if (vx < vy) return -1 * dir;
+      if (vx > vy) return  1 * dir;
+      return 0;
+    });
+    return arr;
+  }
+
+  function renderTable() {
+    const all = filterAndSort();
+    const total = all.length;
+    const pageSize = tState.pageSize;
+    const maxPage = Math.max(1, Math.ceil(total / pageSize));
+    if (tState.page > maxPage) tState.page = maxPage;
+    const start = (tState.page - 1) * pageSize;
+    const slice = all.slice(start, start + pageSize);
+
+    // Update sort indicators
+    $ths.forEach(th => {
+      th.classList.remove('sort-asc','sort-desc');
+      const ind = th.querySelector('.sort-ind');
+      if (th.dataset.sort === tState.sortKey) {
+        th.classList.add(tState.sortDir === 1 ? 'sort-asc' : 'sort-desc');
+        if (ind) ind.textContent = tState.sortDir === 1 ? '↑' : '↓';
+      } else if (ind) {
+        ind.textContent = '↕';
+      }
+    });
+
+    // Render rows
+    if (!slice.length) {
+      $tbody.innerHTML = `<tr><td colspan="5" style="padding:24px; text-align:center; color:#94a3b8;">No matching acronyms.</td></tr>`;
+    } else {
+      $tbody.innerHTML = slice.map(it => `
+        <tr>
+          <td class="acro-col">${escape(it.a)}</td>
+          <td class="full-col">${escape(it.f)}</td>
+          <td class="cat-col"><span class="tcat cat-${it.c}">${escape(it.c)}</span></td>
+          <td class="ver-col">
+            <span class="ver-dot ${it.v ? 'yes' : 'no'}" title="${it.v ? 'Verified in HM Project documentation' : 'Not yet verified — confirm with technical writers / PM'}">
+              ${it.v ? '✓ Verified' : 'Unverified'}
+            </span>
+          </td>
+          <td class="desc-col">${escape(it.d)}</td>
+        </tr>
+      `).join('');
+    }
+
+    // Pager
+    const from = total ? start + 1 : 0;
+    const to   = Math.min(start + pageSize, total);
+    $pagerInfo.innerHTML = `
+      Showing <strong style="color:#fff">${from}–${to}</strong> of <strong style="color:#fff">${total}</strong>
+      ${tState.q || tState.cat || tState.v !== 'all'
+        ? ` <span style="color:#94a3b8">(filtered from ${ACRONYMS.length})</span>`
+        : ''}
+    `;
+    $jumpPage.max = maxPage;
+    $jumpPage.value = tState.page;
+    renderPagerButtons(tState.page, maxPage);
+  }
+
+  function renderPagerButtons(curr, max) {
+    const parts = [];
+    function btn(label, page, opts = {}) {
+      const dis = opts.disabled ? 'disabled' : '';
+      const cls = opts.current ? 'curr' : '';
+      return `<button class="${cls}" data-page="${page}" ${dis}>${label}</button>`;
+    }
+    parts.push(btn('«', 1, { disabled: curr === 1 }));
+    parts.push(btn('‹ Prev', curr - 1, { disabled: curr === 1 }));
+
+    // Window of pages around current
+    const window = 2;
+    const pages = new Set();
+    pages.add(1);
+    pages.add(max);
+    for (let p = curr - window; p <= curr + window; p++) {
+      if (p >= 1 && p <= max) pages.add(p);
+    }
+    const sorted = Array.from(pages).sort((a,b) => a - b);
+    let last = 0;
+    for (const p of sorted) {
+      if (p > last + 1) parts.push('<span style="color:#475569;padding:0 4px;">…</span>');
+      parts.push(btn(String(p), p, { current: p === curr }));
+      last = p;
+    }
+    parts.push(btn('Next ›', curr + 1, { disabled: curr === max }));
+    parts.push(btn('»', max, { disabled: curr === max }));
+    $pagerButtons.innerHTML = parts.join('');
+    $pagerButtons.querySelectorAll('button[data-page]').forEach(b => {
+      b.addEventListener('click', () => {
+        if (b.disabled) return;
+        const p = parseInt(b.dataset.page, 10);
+        if (!isNaN(p)) { tState.page = p; renderTable(); }
+      });
+    });
+  }
+
+  // Esc closes browse view
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.body.classList.contains('mode-browse')) {
+      closeBrowse();
+    }
+  });
+
+})();
+</script>
+
+</body>
+</html>
